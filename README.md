@@ -34,7 +34,7 @@
 
 ## 개요
 
-Multi-Agent CLI는 **Claude(Master)**가 **Gemini(Speed)**, **Codex(Precision)**, **Kiro(Spec)** 세 Slave 에이전트를 조율하여 최적의 결과를 도출하는 시스템입니다.
+Multi-Agent CLI는 **Claude(Master)** 가 **Gemini(Speed)**, **Codex(Precision)**, **Kiro(Spec)** 세 Slave 에이전트를 조율하여 최적의 결과를 도출하는 시스템입니다.
 
 [아임웹 인프라팀의 3-Agent 아키텍처](https://medium.com/@infra-imweb)를 기반으로, 설계 전문 에이전트 **Kiro CLI**를 추가한 4-Agent 확장 버전입니다.
 
