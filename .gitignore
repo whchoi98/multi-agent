@@ -1,0 +1,20 @@
+# Multi-Agent CLI results (temporary, regenerated each run)
+.multi-agent-results/
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings (user-specific)
+.claude/settings.local.json
+
+# Environment
+.env
+.env.local
