@@ -34,9 +34,7 @@
 
 ## 개요
 
-Multi-Agent CLI는 **Claude(Master)** 가 **Gemini(Speed)**, **Codex(Precision)**, **Kiro(Spec)** 세 Slave 에이전트를 조율하여 최적의 결과를 도출하는 시스템입니다.
-
-[아임웹 인프라팀의 3-Agent 아키텍처](https://medium.com/@infra-imweb)를 기반으로, 설계 전문 에이전트 **Kiro CLI**를 추가한 4-Agent 확장 버전입니다.
+Multi-Agent CLI는 4개의 AI CLI 에이전트를 오케스트레이션하여 DevOps, SRE, 개발 작업에서 단독 에이전트의 한계를 넘는 결과를 도출하는 시스템입니다.
 
 **핵심 원칙:**
 - 혼자 해도 되지만, 함께하면 놓치지 않는다
@@ -71,7 +69,7 @@ Multi-Agent CLI는 **Claude(Master)** 가 **Gemini(Speed)**, **Codex(Precision)*
      ┌─────┼──────────┬──────────────┐
      │     │          │              │
      ▼     ▼          ▼              ▼
-  #solo  #quick     #precise       #spec
+  #ask   #scan     #craft         #design
   Master  Gemini     Codex          Kiro
   단독    (45s)      (90s)         (120s)
            │          │              │
@@ -79,7 +77,7 @@ Multi-Agent CLI는 **Claude(Master)** 가 **Gemini(Speed)**, **Codex(Precision)*
      ┌─────┴──────────┴──────────────┘
      │
      ▼
-  #cross          #critical              #plan
+  #verify         #mobilize              #build
   Gemini+Codex    Kiro→Codex→Gemini      Kiro→Codex
   (병렬→비교)    (순차→Go/No-Go)       (스펙→구현→갭분석)
      │               │                    │
@@ -99,24 +97,24 @@ Multi-Agent CLI는 **Claude(Master)** 가 **Gemini(Speed)**, **Codex(Precision)*
 
 | 모드 | 명칭 | 에이전트 | 실행 방식 | 적합한 작업 |
 |------|------|---------|----------|-----------|
-| `#solo` | 단독처리 | Claude | 단독 | 단순 질문, 파일 읽기/수정 |
-| `#quick` | 속도우선 | Gemini | 단독 | 로그 분석, 비용 조회, 대량 데이터 요약 |
-| `#precise` | 정밀분석 | Codex | 단독 | 코드 변경, 테스트 작성, 설정 검증 |
-| `#spec` | 설계먼저 | Kiro | 단독 | 요구사항 분석, 아키텍처 설계, 런북 작성 |
-| `#cross` | 교차검증 | Gemini + Codex | 병렬 → 비교 | IAM 정책, 보안 변경, 코드 리뷰 |
-| `#critical` | 풀파이프라인 | Kiro → Codex → Gemini | 순차 | 프로덕션 장애, 배포, DB 마이그레이션 |
-| `#plan` | 스펙→구현 | Kiro → Codex | 순차 | 리팩토링, API 마이그레이션, 신규 기능 |
+| `#ask` | 단독처리 | Claude | 단독 | 단순 질문, 파일 읽기/수정 |
+| `#scan` | 속도우선 | Gemini | 단독 | 로그 분석, 비용 조회, 대량 데이터 요약 |
+| `#craft` | 정밀분석 | Codex | 단독 | 코드 변경, 테스트 작성, 설정 검증 |
+| `#design` | 설계먼저 | Kiro | 단독 | 요구사항 분석, 아키텍처 설계, 런북 작성 |
+| `#verify` | 교차검증 | Gemini + Codex | 병렬 → 비교 | IAM 정책, 보안 변경, 코드 리뷰 |
+| `#mobilize` | 총동원 | Kiro → Codex → Gemini | 순차 | 프로덕션 장애, 배포, DB 마이그레이션 |
+| `#build` | 스펙→구현 | Kiro → Codex | 순차 | 리팩토링, API 마이그레이션, 신규 기능 |
 
 ### 모드 선택 가이드
 
 ```
-"빨리 파악해야 해"          → #quick
-"정확해야 해"              → #precise
-"설계부터 해야 해"          → #spec
-"두 번 확인해야 해"         → #cross
-"절대 실패하면 안 돼"       → #critical
-"설계하고 바로 구현까지"     → #plan
-"간단한 거"               → #solo
+"빨리 파악해야 해"          → #scan
+"정확해야 해"              → #craft
+"설계부터 해야 해"          → #design
+"두 번 확인해야 해"         → #verify
+"절대 실패하면 안 돼"       → #mobilize
+"설계하고 바로 구현까지"     → #build
+"간단한 거"               → #ask
 ```
 
 ---
@@ -128,26 +126,26 @@ Multi-Agent CLI는 **Claude(Master)** 가 **Gemini(Speed)**, **Codex(Precision)*
 ### 승격 (더 신중하게)
 
 ```
-solo → cross     보안 관련 코드 변경 (IAM, SG, 인증, 암호화)
-solo → critical  프로덕션 배포/롤백, 데이터 삭제, 인프라 변경
-solo → spec      신규 기능 설계, 아키텍처 리팩토링
-quick → cross    Gemini 결과에서 보안 리스크 감지
-cross → critical 교차 검증 중 심각한 불일치 발견
+ask → verify       보안 관련 코드 변경 (IAM, SG, 인증, 암호화)
+ask → mobilize     프로덕션 배포/롤백, 데이터 삭제, 인프라 변경
+ask → design       신규 기능 설계, 아키텍처 리팩토링
+scan → verify      Gemini 결과에서 보안 리스크 감지
+verify → mobilize  교차 검증 중 심각한 불일치 발견
 ```
 
 ### 다운그레이드 (더 효율적으로)
 
 ```
-cross → quick    AWS 대량 읽기 조회 (Codex sandbox 네트워크 제한)
-cross → solo     SSM 트러블슈팅, 레거시 코드베이스 탐색
-spec → solo      단순 설정 변경 (Kiro 오버헤드)
-plan → precise   스펙 불필요한 단순 코드 변경
-critical → cross 장애가 아닌 일반 배포
+verify → scan      AWS 대량 읽기 조회 (Codex sandbox 네트워크 제한)
+verify → ask       SSM 트러블슈팅, 레거시 코드베이스 탐색
+design → ask       단순 설정 변경 (Kiro 오버헤드)
+build → craft      스펙 불필요한 단순 코드 변경
+mobilize → verify  장애가 아닌 일반 배포
 ```
 
 ### Fallback
 
-- Slave 타임아웃 → Master가 `#solo`로 fallback
+- Slave 타임아웃 → Master가 `#ask`로 fallback
 - Slave 2회 연속 실패 → 해당 세션 동안 비활성화
 - 전체 Slave 실패 → Master 단독 + 사용자 상황 보고
 
@@ -249,9 +247,9 @@ cd multi-agent
 Claude Code 세션에서 프롬프트 앞에 `#모드`를 붙입니다.
 
 ```
-#quick 최근 1시간 CloudWatch 로그에서 에러 패턴 분석해줘
-#cross 이 IAM 정책 검토해줘
-#critical 프로덕션 DB에 컬럼 추가 — 5천만 건, 무중단 필수
+#scan 최근 1시간 CloudWatch 로그에서 에러 패턴 분석해줘
+#verify 이 IAM 정책 검토해줘
+#mobilize 프로덕션 DB에 컬럼 추가 — 5천만 건, 무중단 필수
 ```
 
 Master(Claude)가 모드를 판단하고 `ai-delegate.sh`를 통해 Slave를 위임합니다.
@@ -260,9 +258,9 @@ Master(Claude)가 모드를 판단하고 `ai-delegate.sh`를 통해 Slave를 위
 
 ```bash
 # Slave 위임
-bash scripts/ai-delegate.sh quick "CloudWatch 로그 분석"
-bash scripts/ai-delegate.sh cross "IAM 정책 검토"
-bash scripts/ai-delegate.sh critical "프로덕션 배포 검증"
+bash scripts/ai-delegate.sh scan "CloudWatch 로그 분석"
+bash scripts/ai-delegate.sh verify "IAM 정책 검토"
+bash scripts/ai-delegate.sh mobilize "프로덕션 배포 검증"
 
 # 시뮬레이션 (dry run)
 bash scripts/simulate.sh all
@@ -281,21 +279,21 @@ bash scripts/validate.sh all
 
 | 편 | UC | 시나리오 | 모드 |
 |----|-----|---------|------|
-| **DevOps** | UC1 | IAM 정책 변경 검토 | `#cross` |
-| | UC2 | CloudWatch 로그 대량 분석 | `#quick` |
-| | UC3 | Terraform 모듈 리팩토링 | `#plan` |
-| | UC4 | CI/CD 파이프라인 장애 대응 | `#critical` |
-| | UC5 | ECS 오토스케일링 튜닝 | `#precise` |
-| **SRE** | UC6 | 프로덕션 P1 장애 대응 | `#critical` |
-| | UC7 | SLO 기반 알림 설정 | `#cross` |
-| | UC8 | 비용 이상 탐지 분석 | `#quick` |
-| | UC9 | 재해복구(DR) 런북 작성 | `#spec` |
-| | UC10 | 보안 감사 대응 자동화 | `#cross`→`#critical` |
-| **Developer** | UC11 | 레거시 API 마이그레이션 | `#plan` |
-| | UC12 | 유닛 테스트 일괄 생성 | `#precise` |
-| | UC13 | PR 코드 리뷰 자동화 | `#cross` |
-| | UC14 | 신규 마이크로서비스 설계 | `#spec` |
-| | UC15 | 프로덕션 DB 마이그레이션 | `#critical` |
+| **DevOps** | UC1 | IAM 정책 변경 검토 | `#verify` |
+| | UC2 | CloudWatch 로그 대량 분석 | `#scan` |
+| | UC3 | Terraform 모듈 리팩토링 | `#build` |
+| | UC4 | CI/CD 파이프라인 장애 대응 | `#mobilize` |
+| | UC5 | ECS 오토스케일링 튜닝 | `#craft` |
+| **SRE** | UC6 | 프로덕션 P1 장애 대응 | `#mobilize` |
+| | UC7 | SLO 기반 알림 설정 | `#verify` |
+| | UC8 | 비용 이상 탐지 분석 | `#scan` |
+| | UC9 | 재해복구(DR) 런북 작성 | `#design` |
+| | UC10 | 보안 감사 대응 자동화 | `#verify`→`#mobilize` |
+| **Developer** | UC11 | 레거시 API 마이그레이션 | `#build` |
+| | UC12 | 유닛 테스트 일괄 생성 | `#craft` |
+| | UC13 | PR 코드 리뷰 자동화 | `#verify` |
+| | UC14 | 신규 마이크로서비스 설계 | `#design` |
+| | UC15 | 프로덕션 DB 마이그레이션 | `#mobilize` |
 
 ---
 
@@ -328,9 +326,9 @@ steering.md ──┘
 bash scripts/validate.sh all
 
 # 시나리오별 시뮬레이션
-bash scripts/simulate.sh quick      # Gemini 속도 테스트
-bash scripts/simulate.sh plan       # Kiro→Codex 파이프라인
-bash scripts/simulate.sh critical   # 4-Agent 순차 실행
+bash scripts/simulate.sh scan        # Gemini 속도 테스트
+bash scripts/simulate.sh build      # Kiro→Codex 파이프라인
+bash scripts/simulate.sh mobilize   # 4-Agent 순차 실행
 bash scripts/simulate.sh all        # 전체 시나리오
 ```
 
@@ -366,9 +364,7 @@ bash scripts/simulate.sh all        # 전체 시나리오
 
 ## Overview
 
-Multi-Agent CLI is an orchestration system where **Claude (Master)** coordinates three Slave agents — **Gemini (Speed)**, **Codex (Precision)**, and **Kiro (Spec)** — to produce optimal results.
-
-Built upon the [Imweb infra team's 3-Agent architecture](https://medium.com/@infra-imweb), extended with **Kiro CLI** as a dedicated design/specification agent.
+Multi-Agent CLI is an orchestration system where Claude (Master) coordinates three Slave agents — Gemini (Speed), Codex (Precision), and Kiro (Spec) — to produce results that exceed what any single agent can achieve alone.
 
 **Core Principles:**
 - One agent gives 80% of the answer. Multi-agent catches the remaining 20% — the difference between an incident and a near-miss.
@@ -403,15 +399,15 @@ User Prompt (#mode + task description)
      ┌─────┼──────────┬──────────────┐
      │     │          │              │
      ▼     ▼          ▼              ▼
-  #solo  #quick     #precise       #spec
+  #ask   #scan     #craft         #design
   Master  Gemini     Codex          Kiro
-  solo    (45s)      (90s)         (120s)
+  ask     (45s)      (90s)         (120s)
            │          │              │
            ▼          ▼              ▼
      ┌─────┴──────────┴──────────────┘
      │
      ▼
-  #cross          #critical              #plan
+  #verify         #mobilize              #build
   Gemini+Codex    Kiro→Codex→Gemini      Kiro→Codex
   (parallel→      (sequential→           (spec→implement
    compare)        Go/No-Go)              →gap analysis)
@@ -432,24 +428,24 @@ Users prefix their prompt with `#mode` to select the execution mode.
 
 | Mode | Name | Agent(s) | Execution | Best For |
 |------|------|----------|-----------|----------|
-| `#solo` | Solo | Claude | Single | Simple questions, file edits |
-| `#quick` | Speed First | Gemini | Single | Log analysis, cost queries, bulk data |
-| `#precise` | Precision First | Codex | Single | Code changes, tests, config validation |
-| `#spec` | Design First | Kiro | Single | Requirements, architecture, runbooks |
-| `#cross` | Cross-Validation | Gemini + Codex | Parallel → Compare | IAM policies, security changes, code review |
-| `#critical` | Full Pipeline | Kiro → Codex → Gemini | Sequential | Production incidents, deployments, DB migrations |
-| `#plan` | Spec-to-Impl | Kiro → Codex | Sequential | Refactoring, API migration, new features |
+| `#ask` | Solo | Claude | Single | Simple questions, file edits |
+| `#scan` | Speed First | Gemini | Single | Log analysis, cost queries, bulk data |
+| `#craft` | Precision First | Codex | Single | Code changes, tests, config validation |
+| `#design` | Design First | Kiro | Single | Requirements, architecture, runbooks |
+| `#verify` | Cross-Validation | Gemini + Codex | Parallel → Compare | IAM policies, security changes, code review |
+| `#mobilize` | Full Pipeline | Kiro → Codex → Gemini | Sequential | Production incidents, deployments, DB migrations |
+| `#build` | Spec-to-Impl | Kiro → Codex | Sequential | Refactoring, API migration, new features |
 
 ### Mode Selection Guide
 
 ```
-"I need this fast"              → #quick
-"This must be exact"            → #precise
-"Design it first"               → #spec
-"Double-check this"             → #cross
-"This cannot fail"              → #critical
-"Design then implement"         → #plan
-"Just a quick thing"            → #solo
+"I need this fast"              → #scan
+"This must be exact"            → #craft
+"Design it first"               → #design
+"Double-check this"             → #verify
+"This cannot fail"              → #mobilize
+"Design then implement"         → #build
+"Just a quick thing"            → #ask
 ```
 
 ---
@@ -461,26 +457,26 @@ When no mode is specified, or when the task context demands it, Master automatic
 ### Escalation (More Careful)
 
 ```
-solo → cross     Security-related code changes (IAM, SG, auth, encryption)
-solo → critical  Production deploy/rollback, data deletion, major infra changes
-solo → spec      New feature design, architecture refactoring
-quick → cross    Security risk detected in Gemini results
-cross → critical Severe inconsistency found during cross-validation
+ask → verify       Security-related code changes (IAM, SG, auth, encryption)
+ask → mobilize     Production deploy/rollback, data deletion, major infra changes
+ask → design       New feature design, architecture refactoring
+scan → verify      Security risk detected in Gemini results
+verify → mobilize  Severe inconsistency found during cross-validation
 ```
 
 ### De-escalation (More Efficient)
 
 ```
-cross → quick    Bulk AWS read queries (Codex sandbox network limitation)
-cross → solo     SSM troubleshooting, legacy codebase exploration
-spec → solo      Simple config changes (Kiro overhead)
-plan → precise   Simple code changes not requiring a spec
-critical → cross Non-incident deployments, low-risk changes
+verify → scan      Bulk AWS read queries (Codex sandbox network limitation)
+verify → ask       SSM troubleshooting, legacy codebase exploration
+design → ask       Simple config changes (Kiro overhead)
+build → craft      Simple code changes not requiring a spec
+mobilize → verify  Non-incident deployments, low-risk changes
 ```
 
 ### Fallback
 
-- Slave timeout → Master falls back to `#solo`
+- Slave timeout → Master falls back to `#ask`
 - Slave fails twice → Disabled for current session
 - All Slaves fail → Master solo + user notification
 
@@ -582,9 +578,9 @@ cd multi-agent
 Prefix your prompt with `#mode` in a Claude Code session.
 
 ```
-#quick  Analyze CloudWatch error patterns from the last hour
-#cross  Review this IAM policy
-#critical  Add column to production DB — 50M rows, zero downtime required
+#scan  Analyze CloudWatch error patterns from the last hour
+#verify  Review this IAM policy
+#mobilize  Add column to production DB — 50M rows, zero downtime required
 ```
 
 Master (Claude) determines the mode and delegates via `ai-delegate.sh`.
@@ -593,9 +589,9 @@ Master (Claude) determines the mode and delegates via `ai-delegate.sh`.
 
 ```bash
 # Delegate to Slaves
-bash scripts/ai-delegate.sh quick "Analyze CloudWatch logs"
-bash scripts/ai-delegate.sh cross "Review IAM policy"
-bash scripts/ai-delegate.sh critical "Validate production deployment"
+bash scripts/ai-delegate.sh scan "Analyze CloudWatch logs"
+bash scripts/ai-delegate.sh verify "Review IAM policy"
+bash scripts/ai-delegate.sh mobilize "Validate production deployment"
 
 # Simulation (dry run)
 bash scripts/simulate.sh all
@@ -614,21 +610,21 @@ Full document: [`docs/superpowers/specs/2026-03-26-usecase-catalog-design.md`](d
 
 | Role | UC | Scenario | Mode |
 |------|-----|---------|------|
-| **DevOps** | UC1 | IAM policy review | `#cross` |
-| | UC2 | CloudWatch bulk log analysis | `#quick` |
-| | UC3 | Terraform module refactoring | `#plan` |
-| | UC4 | CI/CD pipeline incident | `#critical` |
-| | UC5 | ECS autoscaling tuning | `#precise` |
-| **SRE** | UC6 | Production P1 incident response | `#critical` |
-| | UC7 | SLO-based alerting setup | `#cross` |
-| | UC8 | Cost anomaly detection | `#quick` |
-| | UC9 | Disaster recovery runbook | `#spec` |
-| | UC10 | Security audit automation | `#cross`→`#critical` |
-| **Developer** | UC11 | Legacy API migration | `#plan` |
-| | UC12 | Bulk unit test generation | `#precise` |
-| | UC13 | PR code review automation | `#cross` |
-| | UC14 | New microservice design | `#spec` |
-| | UC15 | Production DB migration | `#critical` |
+| **DevOps** | UC1 | IAM policy review | `#verify` |
+| | UC2 | CloudWatch bulk log analysis | `#scan` |
+| | UC3 | Terraform module refactoring | `#build` |
+| | UC4 | CI/CD pipeline incident | `#mobilize` |
+| | UC5 | ECS autoscaling tuning | `#craft` |
+| **SRE** | UC6 | Production P1 incident response | `#mobilize` |
+| | UC7 | SLO-based alerting setup | `#verify` |
+| | UC8 | Cost anomaly detection | `#scan` |
+| | UC9 | Disaster recovery runbook | `#design` |
+| | UC10 | Security audit automation | `#verify`→`#mobilize` |
+| **Developer** | UC11 | Legacy API migration | `#build` |
+| | UC12 | Bulk unit test generation | `#craft` |
+| | UC13 | PR code review automation | `#verify` |
+| | UC14 | New microservice design | `#design` |
+| | UC15 | Production DB migration | `#mobilize` |
 
 ---
 
@@ -661,8 +657,8 @@ steering.md ──┘
 bash scripts/validate.sh all
 
 # Per-scenario simulation
-bash scripts/simulate.sh quick      # Gemini speed test
-bash scripts/simulate.sh plan       # Kiro→Codex pipeline
-bash scripts/simulate.sh critical   # 4-Agent sequential
+bash scripts/simulate.sh scan        # Gemini speed test
+bash scripts/simulate.sh build      # Kiro→Codex pipeline
+bash scripts/simulate.sh mobilize   # 4-Agent sequential
 bash scripts/simulate.sh all        # All scenarios
 ```

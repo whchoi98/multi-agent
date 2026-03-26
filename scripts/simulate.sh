@@ -81,18 +81,18 @@ prompt_input() {
 }
 
 # ============================================================
-# 시나리오 1: #quick — Security Group 전수 검사
+# 시나리오 1: #scan — Security Group 전수 검사
 # ============================================================
-scenario_quick() {
+scenario_scan() {
     echo ""
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BOLD}  시나리오 1: #quick — Security Group 전수 검사${NC}"
+    echo -e "${BOLD}  시나리오 1: #scan — Security Group 전수 검사${NC}"
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-    prompt_input "#quick sso-prod 프로파일로 모든 SG에서 0.0.0.0/0 인바운드가 열린 항목 찾고 리소스 매핑해줘"
+    prompt_input "#scan sso-prod 프로파일로 모든 SG에서 0.0.0.0/0 인바운드가 열린 항목 찾고 리소스 매핑해줘"
 
-    echo -e "${BLUE}[Master]${NC} 모드 감지: ${GREEN}#quick${NC} → Gemini 단독 위임"
-    echo -e "${BLUE}[Master]${NC} ai-delegate.sh quick 호출..."
+    echo -e "${BLUE}[Master]${NC} 모드 감지: ${GREEN}#scan${NC} → Gemini 단독 위임"
+    echo -e "${BLUE}[Master]${NC} ai-delegate.sh scan 호출..."
     sleep 1
 
     agent_header "Gemini CLI" "$CYAN" "Speed Slave" "45s timeout"
@@ -136,18 +136,18 @@ EOF
 }
 
 # ============================================================
-# 시나리오 2: #cross — IAM 정책 교차 검증
+# 시나리오 2: #verify — IAM 정책 교차 검증
 # ============================================================
-scenario_cross() {
+scenario_verify() {
     echo ""
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BOLD}  시나리오 2: #cross — IAM 정책 교차 검증${NC}"
+    echo -e "${BOLD}  시나리오 2: #verify — IAM 정책 교차 검증${NC}"
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-    prompt_input "#cross payment-processor Lambda에 S3 devops-receipts 읽기 + DynamoDB payment-log 읽기/쓰기 최소 권한 정책 작성해줘"
+    prompt_input "#verify payment-processor Lambda에 S3 devops-receipts 읽기 + DynamoDB payment-log 읽기/쓰기 최소 권한 정책 작성해줘"
 
-    echo -e "${BLUE}[Master]${NC} 모드 감지: ${YELLOW}#cross${NC} → Gemini + Codex 병렬 실행"
-    echo -e "${BLUE}[Master]${NC} ai-delegate.sh cross 호출..."
+    echo -e "${BLUE}[Master]${NC} 모드 감지: ${YELLOW}#verify${NC} → Gemini + Codex 병렬 실행"
+    echo -e "${BLUE}[Master]${NC} ai-delegate.sh verify 호출..."
     sleep 1
 
     # 병렬 표시
@@ -288,18 +288,18 @@ EOF
 }
 
 # ============================================================
-# 시나리오 3: #plan — Kiro 스펙 → Codex 구현 (NEW)
+# 시나리오 3: #build — Kiro 스펙 → Codex 구현 (NEW)
 # ============================================================
-scenario_plan() {
+scenario_build() {
     echo ""
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BOLD}  시나리오 3: #plan — Kiro 스펙 기반 구현 (NEW)${NC}"
+    echo -e "${BOLD}  시나리오 3: #build — Kiro 스펙 기반 구현 (NEW)${NC}"
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-    prompt_input "#plan Lambda@Edge로 canary 배포 라우팅 구현해줘. 10% 트래픽을 v2로 보내야 해"
+    prompt_input "#build Lambda@Edge로 canary 배포 라우팅 구현해줘. 10% 트래픽을 v2로 보내야 해"
 
-    echo -e "${BLUE}[Master]${NC} 모드 감지: ${CYAN}#plan${NC} → Kiro(스펙) → Codex(구현) 순차 실행"
-    echo -e "${BLUE}[Master]${NC} ai-delegate.sh plan 호출..."
+    echo -e "${BLUE}[Master]${NC} 모드 감지: ${CYAN}#build${NC} → Kiro(스펙) → Codex(구현) 순차 실행"
+    echo -e "${BLUE}[Master]${NC} ai-delegate.sh build 호출..."
     sleep 1
 
     # Step 1: Kiro
@@ -361,7 +361,7 @@ Client → CloudFront → Lambda@Edge (viewer-request)
 
 ## 실행안
 1. Codex가 T1~T4 구현 (이 스펙 기반)
-2. T5 모니터링은 별도 #quick으로 Datadog 대시보드 생성
+2. T5 모니터링은 별도 #scan으로 Datadog 대시보드 생성
 3. 구현 후 staging 환경에서 트래픽 비율 검증
 
 EOF
@@ -491,26 +491,26 @@ EOF
 ## 실행안
 1. 기존 CloudFront distribution ID 확인
 2. 있으면 → `aws_cloudfront_distribution` data source로 참조
-3. 없으면 → Codex에게 distribution 리소스 추가 요청 (#precise)
+3. 없으면 → Codex에게 distribution 리소스 추가 요청 (#craft)
 
 EOF
 }
 
 # ============================================================
-# 시나리오 4: #critical — 장애 대응 4-Agent 순차
+# 시나리오 4: #mobilize — 장애 대응 4-Agent 순차
 # ============================================================
-scenario_critical() {
+scenario_mobilize() {
     echo ""
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BOLD}  시나리오 4: #critical — RDS 메이저 업그레이드 (4-Agent 순차)${NC}"
+    echo -e "${BOLD}  시나리오 4: #mobilize — RDS 메이저 업그레이드 (4-Agent 순차)${NC}"
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-    prompt_input "#critical imweb-prod-main RDS MySQL 8.0 → 8.4 메이저 업그레이드 계획 수립. 다운타임 최소화."
+    prompt_input "#mobilize imweb-prod-main RDS MySQL 8.0 → 8.4 메이저 업그레이드 계획 수립. 다운타임 최소화."
 
-    echo -e "${BLUE}[Master]${NC} 모드 감지: ${RED}#critical${NC} → 4-Agent 순차 실행"
-    echo -e "${BLUE}[Master]${NC} ${RED}프로덕션 데이터베이스 변경 → critical 모드 확인됨${NC}"
+    echo -e "${BLUE}[Master]${NC} 모드 감지: ${RED}#mobilize${NC} → 4-Agent 순차 실행"
+    echo -e "${BLUE}[Master]${NC} ${RED}프로덕션 데이터베이스 변경 → mobilize 모드 확인됨${NC}"
     echo -e "${BLUE}[Master]${NC} 파이프라인: Kiro(설계) → Codex(검증) → Gemini(영향도) → Master(판정)"
-    echo -e "${BLUE}[Master]${NC} ai-delegate.sh critical 호출..."
+    echo -e "${BLUE}[Master]${NC} ai-delegate.sh mobilize 호출..."
     sleep 1
 
     # Step 1: Kiro
@@ -690,12 +690,12 @@ EOF
 scenario_downgrade() {
     echo ""
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BOLD}  시나리오 5: 자동 다운그레이드 (#cross → #solo)${NC}"
+    echo -e "${BOLD}  시나리오 5: 자동 다운그레이드 (#verify → #ask)${NC}"
     echo -e "${BOLD}${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-    prompt_input "#cross EC2 레거시 서버에서 config_common.php 설정 로딩 체인 추적해줘"
+    prompt_input "#verify EC2 레거시 서버에서 config_common.php 설정 로딩 체인 추적해줘"
 
-    echo -e "${BLUE}[Master]${NC} 모드 감지: ${YELLOW}#cross${NC} → Gemini + Codex 병렬 실행"
+    echo -e "${BLUE}[Master]${NC} 모드 감지: ${YELLOW}#verify${NC} → Gemini + Codex 병렬 실행"
     sleep 1
 
     echo ""
@@ -709,12 +709,12 @@ scenario_downgrade() {
     echo ""
 
     echo -e "${YELLOW}[Master]${NC} ${BOLD}⚡ 자동 다운그레이드 발동${NC}"
-    echo -e "${YELLOW}[Master]${NC} 규칙: \"cross → solo: 대규모 레거시 코드베이스 탐색\""
+    echo -e "${YELLOW}[Master]${NC} 규칙: \"verify → ask: 대규모 레거시 코드베이스 탐색\""
     echo -e "${YELLOW}[Master]${NC} Slave가 파일 구조 파악에 실패 → Master 직접 처리"
     echo ""
     sleep 1
 
-    agent_header "Claude (Master)" "$GREEN" "solo 모드로 직접 처리" "제한 없음"
+    agent_header "Claude (Master)" "$GREEN" "ask 모드로 직접 처리" "제한 없음"
     wait_spinner 1 "SSM으로 서버 접속..."
     echo -e "  ${DIM}\$ aws ssm start-session --target i-0abc123def456${NC}"
     wait_spinner 1 "grep -r 'config_common' /var/www/html/"
@@ -755,35 +755,35 @@ main() {
     echo ""
     echo -e "${BOLD}${WHITE}╔══════════════════════════════════════════════════════════╗${NC}"
     echo -e "${BOLD}${WHITE}║  Multi-Agent CLI Simulation (4-Agent Architecture)      ║${NC}"
-    echo -e "${BOLD}${WHITE}║  Claude(Master) + Gemini(Speed) + Codex(Precise)        ║${NC}"
-    echo -e "${BOLD}${WHITE}║                + Kiro(Spec) ← NEW                       ║${NC}"
+    echo -e "${BOLD}${WHITE}║  Claude(Master) + Gemini(Speed) + Codex(Craft)           ║${NC}"
+    echo -e "${BOLD}${WHITE}║                + Kiro(Design) ← NEW                      ║${NC}"
     echo -e "${BOLD}${WHITE}╚══════════════════════════════════════════════════════════╝${NC}"
 
     local scenario="${1:-all}"
 
     case "$scenario" in
-        1|quick)     scenario_quick ;;
-        2|cross)     scenario_cross ;;
-        3|plan)      scenario_plan ;;
-        4|critical)  scenario_critical ;;
+        1|scan)      scenario_scan ;;
+        2|verify)    scenario_verify ;;
+        3|build)     scenario_build ;;
+        4|mobilize)  scenario_mobilize ;;
         5|downgrade) scenario_downgrade ;;
         all)
-            scenario_quick
+            scenario_scan
             echo ""; echo ""; sleep 2
-            scenario_cross
+            scenario_verify
             echo ""; echo ""; sleep 2
-            scenario_plan
+            scenario_build
             echo ""; echo ""; sleep 2
-            scenario_critical
+            scenario_mobilize
             echo ""; echo ""; sleep 2
             scenario_downgrade
             ;;
         *)
             echo "Usage: simulate.sh [1|2|3|4|5|all]"
-            echo "  1/quick     - #quick SG 전수 검사"
-            echo "  2/cross     - #cross IAM 교차 검증"
-            echo "  3/plan      - #plan Kiro 스펙 → Codex 구현"
-            echo "  4/critical  - #critical RDS 업그레이드 4-Agent"
+            echo "  1/scan      - #scan SG 전수 검사"
+            echo "  2/verify    - #verify IAM 교차 검증"
+            echo "  3/build     - #build Kiro 스펙 → Codex 구현"
+            echo "  4/mobilize  - #mobilize RDS 업그레이드 4-Agent"
             echo "  5/downgrade - 자동 다운그레이드 시연"
             echo "  all         - 전체 시나리오 (기본)"
             ;;

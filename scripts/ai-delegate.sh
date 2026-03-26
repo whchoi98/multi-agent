@@ -7,12 +7,12 @@
 # Usage: ai-delegate.sh <mode> <prompt> [--context <file>]
 #
 # Modes:
-#   quick    - Gemini만 (속도 우선, 45s)
-#   precise  - Codex만 (정밀도 우선, 90s)
-#   spec     - Kiro만 (설계/스펙 생성, 120s)
-#   cross    - Gemini + Codex 병렬 → Master 비교 판정
-#   critical - Kiro(설계) → Codex(검증) → Gemini(영향도) → Master 종합
-#   plan     - Kiro(스펙) → Codex(구현) → Master 판정
+#   scan     - Gemini만 (속도 우선, 45s)
+#   craft    - Codex만 (정밀도 우선, 90s)
+#   design   - Kiro만 (설계/스펙 생성, 120s)
+#   verify   - Gemini + Codex 병렬 → Master 비교 판정
+#   mobilize - Kiro(설계) → Codex(검증) → Gemini(영향도) → Master 종합
+#   build    - Kiro(스펙) → Codex(구현) → Master 판정
 #
 # 4-Block Format 강제: 모든 Slave 출력은 결론/근거/리스크/실행안
 
@@ -24,10 +24,10 @@ RESULTS_DIR="${PROJECT_ROOT}/.multi-agent-results"
 POLICIES_DIR="${PROJECT_ROOT}/claude-policies"
 
 # --- 타임아웃 설정 (가드레일) ---
-TIMEOUT_QUICK=45
-TIMEOUT_PRECISE=90
-TIMEOUT_SPEC=120
-TIMEOUT_CRITICAL=120
+TIMEOUT_SCAN=45
+TIMEOUT_CRAFT=90
+TIMEOUT_DESIGN=120
+TIMEOUT_MOBILIZE=120
 
 # --- 색상 ---
 RED='\033[0;31m'
@@ -71,7 +71,7 @@ init_results() {
 
 run_gemini() {
     local prompt="$1"
-    local timeout="${2:-$TIMEOUT_QUICK}"
+    local timeout="${2:-$TIMEOUT_SCAN}"
     local output_file="${RESULTS_DIR}/gemini_result.md"
 
     log "${CYAN}Gemini(Speed)${NC} 실행 중... (timeout: ${timeout}s)"
@@ -88,7 +88,7 @@ Gemini 실행 실패 (timeout: ${timeout}s)
 타임아웃 초과 또는 실행 오류
 
 ## 리스크
-결과 없음 — Master가 solo로 fallback 필요
+결과 없음 — Master가 ask로 fallback 필요
 
 ## 실행안
 Master가 직접 처리하거나 다른 Slave로 재시도" > "$output_file"
@@ -101,7 +101,7 @@ Master가 직접 처리하거나 다른 Slave로 재시도" > "$output_file"
 
 run_codex() {
     local prompt="$1"
-    local timeout="${2:-$TIMEOUT_PRECISE}"
+    local timeout="${2:-$TIMEOUT_CRAFT}"
     local output_file="${RESULTS_DIR}/codex_result.md"
 
     log "${PURPLE}Codex(Precision)${NC} 실행 중... (timeout: ${timeout}s)"
@@ -131,7 +131,7 @@ Master가 직접 처리하거나 타임아웃 증가 후 재시도" > "$output_f
 
 run_kiro() {
     local prompt="$1"
-    local timeout="${2:-$TIMEOUT_SPEC}"
+    local timeout="${2:-$TIMEOUT_DESIGN}"
     local output_file="${RESULTS_DIR}/kiro_result.md"
 
     log "${CYAN}Kiro(Spec)${NC} 실행 중... (timeout: ${timeout}s)"
@@ -161,42 +161,42 @@ Master가 직접 설계하거나 Codex로 대체" > "$output_file"
 
 # --- 모드별 실행 ---
 
-mode_quick() {
+mode_scan() {
     local prompt="$1"
-    log "모드: ${GREEN}#quick${NC} — Gemini 단독 (속도 우선)"
+    log "모드: ${GREEN}#scan${NC} — Gemini 단독 (속도 우선)"
     echo "---"
     echo "## Gemini (Speed Slave) 결과"
     echo ""
     run_gemini "$prompt"
 }
 
-mode_precise() {
+mode_craft() {
     local prompt="$1"
-    log "모드: ${PURPLE}#precise${NC} — Codex 단독 (정밀도 우선)"
+    log "모드: ${PURPLE}#craft${NC} — Codex 단독 (정밀도 우선)"
     echo "---"
     echo "## Codex (Precision Slave) 결과"
     echo ""
     run_codex "$prompt"
 }
 
-mode_spec() {
+mode_design() {
     local prompt="$1"
-    log "모드: ${CYAN}#spec${NC} — Kiro 단독 (설계/스펙 생성)"
+    log "모드: ${CYAN}#design${NC} — Kiro 단독 (설계/스펙 생성)"
     echo "---"
     echo "## Kiro (Spec Slave) 결과"
     echo ""
     run_kiro "$prompt"
 }
 
-mode_cross() {
+mode_verify() {
     local prompt="$1"
-    log "모드: ${YELLOW}#cross${NC} — Gemini + Codex 병렬 → Master 비교 판정"
+    log "모드: ${YELLOW}#verify${NC} — Gemini + Codex 병렬 → Master 비교 판정"
 
     # 병렬 실행
-    run_gemini "$prompt" "$TIMEOUT_QUICK" > "${RESULTS_DIR}/gemini_result.md" 2>&1 &
+    run_gemini "$prompt" "$TIMEOUT_SCAN" > "${RESULTS_DIR}/gemini_result.md" 2>&1 &
     local gemini_pid=$!
 
-    run_codex "$prompt" "$TIMEOUT_PRECISE" > "${RESULTS_DIR}/codex_result.md" 2>&1 &
+    run_codex "$prompt" "$TIMEOUT_CRAFT" > "${RESULTS_DIR}/codex_result.md" 2>&1 &
     local codex_pid=$!
 
     # 결과 대기
@@ -205,7 +205,7 @@ mode_cross() {
 
     # 결과 출력
     echo "---"
-    echo "## Cross-Validation 결과"
+    echo "## Verify-Validation 결과"
     echo ""
     echo "### Gemini (Speed Slave)"
     echo ""
@@ -222,19 +222,19 @@ mode_cross() {
     echo "차이점, 누락 항목, 최종 채택 버전을 4-Block Format으로 정리해주세요."
 }
 
-mode_critical() {
+mode_mobilize() {
     local prompt="$1"
-    log "모드: ${RED}#critical${NC} — 4-Agent 순차 실행 (최고 위험)"
+    log "모드: ${RED}#mobilize${NC} — 4-Agent 순차 실행 (최고 위험)"
 
     echo "---"
-    echo "## Critical Mode: 4-Agent 순차 실행"
+    echo "## Mobilize Mode: 4-Agent 순차 실행"
     echo ""
 
     # Step 1: Kiro — 스펙/설계/체크리스트
     echo "### Step 1: Kiro (Spec) — 설계 및 체크리스트"
     echo ""
     local kiro_prompt="다음 작업의 설계 문서를 작성하세요. 요구사항 분석, 영향 범위, 체크리스트를 포함해주세요: ${prompt}"
-    run_kiro "$kiro_prompt" "$TIMEOUT_SPEC" > "${RESULTS_DIR}/kiro_result.md" 2>&1
+    run_kiro "$kiro_prompt" "$TIMEOUT_DESIGN" > "${RESULTS_DIR}/kiro_result.md" 2>&1
     cat "${RESULTS_DIR}/kiro_result.md" 2>/dev/null || echo "(Kiro 결과 없음)"
     echo ""
 
@@ -250,7 +250,7 @@ ${kiro_result}
 
 [원본 요청]:
 ${prompt}"
-    run_codex "$codex_prompt" "$TIMEOUT_PRECISE" > "${RESULTS_DIR}/codex_result.md" 2>&1
+    run_codex "$codex_prompt" "$TIMEOUT_CRAFT" > "${RESULTS_DIR}/codex_result.md" 2>&1
     cat "${RESULTS_DIR}/codex_result.md" 2>/dev/null || echo "(Codex 결과 없음)"
     echo ""
 
@@ -269,7 +269,7 @@ ${codex_result}
 
 [원본 요청]:
 ${prompt}"
-    run_gemini "$gemini_prompt" "$TIMEOUT_QUICK" > "${RESULTS_DIR}/gemini_result.md" 2>&1
+    run_gemini "$gemini_prompt" "$TIMEOUT_SCAN" > "${RESULTS_DIR}/gemini_result.md" 2>&1
     cat "${RESULTS_DIR}/gemini_result.md" 2>/dev/null || echo "(Gemini 결과 없음)"
     echo ""
 
@@ -279,19 +279,19 @@ ${prompt}"
     echo "4-Block Format으로 최종 판정, 통합 체크리스트, 실행 계획을 작성해주세요."
 }
 
-mode_plan() {
+mode_build() {
     local prompt="$1"
-    log "모드: ${CYAN}#plan${NC} — Kiro(스펙) → Codex(구현) → Master 판정"
+    log "모드: ${CYAN}#build${NC} — Kiro(스펙) → Codex(구현) → Master 판정"
 
     echo "---"
-    echo "## Plan Mode: Spec-Driven Implementation"
+    echo "## Build Mode: Spec-Driven Implementation"
     echo ""
 
     # Step 1: Kiro — 스펙 생성
     echo "### Step 1: Kiro (Spec) — 요구사항 및 설계"
     echo ""
     local kiro_prompt="다음 요구사항의 상세 스펙을 작성하세요. 요구사항 분석, 기술 설계, 구현 태스크 분해를 포함해주세요: ${prompt}"
-    run_kiro "$kiro_prompt" "$TIMEOUT_SPEC" > "${RESULTS_DIR}/kiro_result.md" 2>&1
+    run_kiro "$kiro_prompt" "$TIMEOUT_DESIGN" > "${RESULTS_DIR}/kiro_result.md" 2>&1
     cat "${RESULTS_DIR}/kiro_result.md" 2>/dev/null || echo "(Kiro 결과 없음)"
     echo ""
 
@@ -307,7 +307,7 @@ ${kiro_result}
 
 [원본 요청]:
 ${prompt}"
-    run_codex "$codex_prompt" "$TIMEOUT_PRECISE" > "${RESULTS_DIR}/codex_result.md" 2>&1
+    run_codex "$codex_prompt" "$TIMEOUT_CRAFT" > "${RESULTS_DIR}/codex_result.md" 2>&1
     cat "${RESULTS_DIR}/codex_result.md" 2>/dev/null || echo "(Codex 결과 없음)"
     echo ""
 
@@ -323,18 +323,18 @@ print_escalation_guide() {
 ## 자동 승격/다운그레이드 규칙 (Master 참고용)
 
 ### 승격 (더 신중하게)
-- solo → cross  : 보안 관련 코드 변경 (IAM, SG, 인증, 암호화)
-- solo → critical: 프로덕션 배포/롤백, 데이터 삭제, 인프라 변경
-- solo → spec   : 신규 기능 설계, 아키텍처 변경
-- quick → cross : Gemini 결과에 보안 리스크 감지
+- ask → verify   : 보안 관련 코드 변경 (IAM, SG, 인증, 암호화)
+- ask → mobilize : 프로덕션 배포/롤백, 데이터 삭제, 인프라 변경
+- ask → design   : 신규 기능 설계, 아키텍처 변경
+- scan → verify  : Gemini 결과에 보안 리스크 감지
 
 ### 다운그레이드 (더 효율적으로)
-- cross → quick  : AWS 대량 읽기 조회 (Codex sandbox 네트워크 제한)
-- cross → solo   : SSM 기반 트러블슈팅 (Slave 타임아웃)
-- cross → solo   : 대규모 레거시 코드베이스 탐색
-- spec → solo    : 단순 설정 변경 (Kiro 오버헤드)
-- plan → precise : 스펙 불필요한 단순 코드 변경
-- critical → cross: 장애 아닌 일반 배포
+- verify → scan    : AWS 대량 읽기 조회 (Codex sandbox 네트워크 제한)
+- verify → ask     : SSM 기반 트러블슈팅 (Slave 타임아웃)
+- verify → ask     : 대규모 레거시 코드베이스 탐색
+- design → ask     : 단순 설정 변경 (Kiro 오버헤드)
+- build → craft    : 스펙 불필요한 단순 코드 변경
+- mobilize → verify: 장애 아닌 일반 배포
 
 GUIDE
 }
@@ -348,23 +348,23 @@ main() {
     if [[ -z "$mode" || -z "$prompt" ]]; then
         echo "Usage: ai-delegate.sh <mode> <prompt>"
         echo ""
-        echo "Modes: quick | precise | spec | cross | critical | plan | guide"
+        echo "Modes: scan | craft | design | verify | mobilize | build | guide"
         exit 1
     fi
 
     init_results
 
     case "$mode" in
-        quick)    mode_quick "$prompt" ;;
-        precise)  mode_precise "$prompt" ;;
-        spec)     mode_spec "$prompt" ;;
-        cross)    mode_cross "$prompt" ;;
-        critical) mode_critical "$prompt" ;;
-        plan)     mode_plan "$prompt" ;;
+        scan)     mode_scan "$prompt" ;;
+        craft)    mode_craft "$prompt" ;;
+        design)   mode_design "$prompt" ;;
+        verify)   mode_verify "$prompt" ;;
+        mobilize) mode_mobilize "$prompt" ;;
+        build)    mode_build "$prompt" ;;
         guide)    print_escalation_guide ;;
         *)
             error "알 수 없는 모드: $mode"
-            echo "사용 가능: quick | precise | spec | cross | critical | plan | guide"
+            echo "사용 가능: scan | craft | design | verify | mobilize | build | guide"
             exit 1
             ;;
     esac
