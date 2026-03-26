@@ -1,0 +1,7 @@
+{
+  "name": "multi-agent",
+  "version": "1.0.0",
+  "description": "4-Agent CLI 오케스트레이션 — Claude(Master) + Gemini(Speed) + Codex(Precision) + Kiro(Spec)",
+  "homepage": "https://github.com/whchoi98/multi-agent",
+  "autoDiscover": true
+}
