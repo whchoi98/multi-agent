@@ -16,50 +16,77 @@ Gemini(Speed), Codex(Precision), Kiro(Spec) 세 Slave를 조율하여 최적의 
 
 ---
 
+## 모드 선택: 하이브리드 방식
+
+### 기본 동작: 자동 감지
+
+사용자가 모드를 지정하지 않으면 Master가 프롬프트를 분석하여 **자동으로 최적 모드를 선택**합니다.
+선택된 모드를 사용자에게 표시합니다: `[verify 모드로 실행합니다]`
+
+### 수동 오버라이드: `@모드`
+
+자동 감지를 무시하고 특정 모드를 강제 지정할 때 `@모드`를 프롬프트 앞에 붙입니다.
+
+```
+@verify 이 IAM 정책 검토해줘        ← 강제 지정
+@scan 프로덕션 로그 빨리 확인해줘    ← 자동이면 mobilize지만 scan 강제
+```
+
+---
+
+## 자동 감지 규칙
+
+사용자 프롬프트에서 키워드를 분석하여 모드를 결정합니다. 우선순위 순으로 매칭.
+
+| 우선순위 | 키워드 패턴 | 모드 | 에이전트 |
+|---------|-----------|------|---------|
+| 1 | 프로덕션 + (배포\|롤백\|삭제\|마이그레이션\|장애\|P1\|긴급) | **mobilize** | Kiro→Codex→Gemini |
+| 2 | (IAM\|SG\|보안\|인증\|암호화\|키 관리) + (검토\|변경\|추가\|정책) | **verify** | Gemini+Codex 병렬 |
+| 3 | (설계\|아키텍처\|요구사항\|분리\|런북\|마이크로서비스) + 신규 | **design** | Kiro |
+| 4 | (리팩토링\|마이그레이션\|구현) + 설계 필요 판단 | **build** | Kiro→Codex |
+| 5 | (로그\|비용\|대량\|조회\|요약) + 속도/긴급성 암시 | **scan** | Gemini |
+| 6 | (코드\|테스트\|설정\|수정\|최적화) + 정밀/정확 필요 | **craft** | Codex |
+| 7 | 위 패턴 미매칭 (기본값) | **ask** | Master 단독 |
+
+### 감지 후 동작
+
+```
+사용자: 이 IAM 정책 검토해줘
+
+Master: [verify 모드] IAM 보안 변경 감지 → Gemini + Codex 교차검증으로 실행합니다.
+        (다른 모드를 원하면 @모드를 붙여주세요)
+```
+
+---
+
 ## 실행 모드 (7가지)
 
-사용자가 `#모드` 해시태그를 프롬프트 앞에 붙이면 해당 모드로 실행합니다.
+| 모드 | 명칭 | 에이전트 | 실행 방식 |
+|------|------|---------|----------|
+| **ask** | 단독처리 | Claude | Master 단독 |
+| **scan** | 속도우선 | Gemini | 단독 (45s) |
+| **craft** | 정밀분석 | Codex | 단독 (90s) |
+| **design** | 설계먼저 | Kiro | 단독 (120s) |
+| **verify** | 교차검증 | Gemini + Codex | 병렬 → 비교 판정 |
+| **mobilize** | 총동원 | Kiro → Codex → Gemini | 순차 → Go/No-Go |
+| **build** | 스펙→구현 | Kiro → Codex | 순차 → 갭 분석 |
 
-### #ask (기본)
-- Master 단독 처리
-- 단순 질문, 파일 읽기/수정, 짧은 작업
+### 모드별 실행 명령
 
-### #scan → Gemini
-- 속도가 생명인 작업
-- 로그 분석, 문서 초안, AWS 대량 조회, 데이터 요약
-- `bash scripts/ai-delegate.sh scan "<prompt>"`
-
-### #craft → Codex
-- 정확도가 생명인 작업
-- 코드 변경, 테스트 작성, 설정 파일 수정
-- `bash scripts/ai-delegate.sh craft "<prompt>"`
-
-### #design → Kiro
-- 설계가 필요한 작업
-- 신규 기능 요구사항 분석, 아키텍처 설계, 태스크 분해
-- `bash scripts/ai-delegate.sh design "<prompt>"`
-
-### #verify → Gemini + Codex 병렬
-- 교차 검증이 필요한 고위험 작업
-- 보안 변경, IAM 정책, 네트워크 규칙
-- 두 결과를 Master가 비교 판정
-- `bash scripts/ai-delegate.sh verify "<prompt>"`
-
-### #mobilize → Kiro → Codex → Gemini → Master 순차
-- 최고 위험 작업 (프로덕션 배포, 장애 대응, 데이터 마이그레이션)
-- 각 단계 결과가 다음 단계의 입력
-- `bash scripts/ai-delegate.sh mobilize "<prompt>"`
-
-### #build → Kiro → Codex → Master
-- 스펙 기반 구현 파이프라인
-- Kiro가 스펙 생성 → Codex가 스펙 기반 구현 → Master가 적합성 판정
-- `bash scripts/ai-delegate.sh build "<prompt>"`
+```bash
+bash scripts/ai-delegate.sh scan "<prompt>"
+bash scripts/ai-delegate.sh craft "<prompt>"
+bash scripts/ai-delegate.sh design "<prompt>"
+bash scripts/ai-delegate.sh verify "<prompt>"
+bash scripts/ai-delegate.sh mobilize "<prompt>"
+bash scripts/ai-delegate.sh build "<prompt>"
+```
 
 ---
 
 ## 자동 승격 규칙
 
-사용자가 모드를 명시하지 않았거나 `#ask`일 때, 아래 조건에 해당하면 자동 승격합니다.
+자동 감지 또는 수동 지정 후에도, 작업 특성에 따라 Master가 모드를 조정합니다.
 
 ### 승격 (더 신중하게)
 ```
@@ -103,19 +130,19 @@ mobilize → verify  : 장애가 아닌 일반 배포, 위험도 낮은 변경
 
 ## Master의 Judge 역할
 
-### #verify 모드에서의 판정
+### verify 모드에서의 판정
 1. 두 Slave 결과의 **차이점**을 식별
 2. 각 차이점에 대해 어느 쪽이 더 적절한지 **근거와 함께** 판단
 3. 최종 채택 버전을 **4-Block Format**으로 출력
 4. 필요시 두 결과를 **병합**하여 최적 버전 생성
 
-### #mobilize 모드에서의 종합
+### mobilize 모드에서의 종합
 1. 3단계(Kiro→Codex→Gemini) 결과를 **통합**
 2. 단계 간 **모순이나 누락**을 식별
 3. **Go/No-Go 판정** + 통합 체크리스트 생성
 4. 4-Block Format으로 최종 리포트
 
-### #build 모드에서의 검증
+### build 모드에서의 검증
 1. Kiro 스펙과 Codex 구현을 **대조**
 2. 스펙 미충족 항목 식별
 3. 구현 품질 판정 + 보완 사항

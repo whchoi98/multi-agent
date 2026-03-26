@@ -57,19 +57,19 @@ Multi-Agent CLI는 4개의 AI CLI 에이전트를 오케스트레이션하여 De
 ### 시스템 흐름도
 
 ```
-사용자 프롬프트 (#모드 + 작업 내용)
+사용자 프롬프트 (@모드 + 작업 내용, 또는 자동 감지)
     │
     ▼
 ┌─────────────────────────────────┐
 │         Claude (Master)          │
-│  모드 판단 → 자동 승격 판단 →    │
+│  자동 모드 감지 → 승격 판단 →    │
 │  Slave 위임 또는 단독 처리       │
 └──────────┬──────────────────────┘
            │
      ┌─────┼──────────┬──────────────┐
      │     │          │              │
      ▼     ▼          ▼              ▼
-  #ask   #scan     #craft         #design
+  @ask   @scan     @craft         @design
   Master  Gemini     Codex          Kiro
   단독    (45s)      (90s)         (120s)
            │          │              │
@@ -77,7 +77,7 @@ Multi-Agent CLI는 4개의 AI CLI 에이전트를 오케스트레이션하여 De
      ┌─────┴──────────┴──────────────┘
      │
      ▼
-  #verify         #mobilize              #build
+  @verify         @mobilize              @build
   Gemini+Codex    Kiro→Codex→Gemini      Kiro→Codex
   (병렬→비교)    (순차→Go/No-Go)       (스펙→구현→갭분석)
      │               │                    │
@@ -91,30 +91,30 @@ Multi-Agent CLI는 4개의 AI CLI 에이전트를 오케스트레이션하여 De
 
 ## 7가지 실행 모드
 
-사용자가 프롬프트 앞에 `#모드`를 붙여 실행합니다.
+기본적으로 Master가 프롬프트를 분석하여 자동으로 모드를 선택합니다. 수동 오버라이드가 필요하면 `@모드`를 프롬프트 앞에 붙입니다.
 
 ### 모드 상세
 
 | 모드 | 명칭 | 에이전트 | 실행 방식 | 적합한 작업 |
 |------|------|---------|----------|-----------|
-| `#ask` | 단독처리 | Claude | 단독 | 단순 질문, 파일 읽기/수정 |
-| `#scan` | 속도우선 | Gemini | 단독 | 로그 분석, 비용 조회, 대량 데이터 요약 |
-| `#craft` | 정밀분석 | Codex | 단독 | 코드 변경, 테스트 작성, 설정 검증 |
-| `#design` | 설계먼저 | Kiro | 단독 | 요구사항 분석, 아키텍처 설계, 런북 작성 |
-| `#verify` | 교차검증 | Gemini + Codex | 병렬 → 비교 | IAM 정책, 보안 변경, 코드 리뷰 |
-| `#mobilize` | 총동원 | Kiro → Codex → Gemini | 순차 | 프로덕션 장애, 배포, DB 마이그레이션 |
-| `#build` | 스펙→구현 | Kiro → Codex | 순차 | 리팩토링, API 마이그레이션, 신규 기능 |
+| `@ask` | 단독처리 | Claude | 단독 | 단순 질문, 파일 읽기/수정 |
+| `@scan` | 속도우선 | Gemini | 단독 | 로그 분석, 비용 조회, 대량 데이터 요약 |
+| `@craft` | 정밀분석 | Codex | 단독 | 코드 변경, 테스트 작성, 설정 검증 |
+| `@design` | 설계먼저 | Kiro | 단독 | 요구사항 분석, 아키텍처 설계, 런북 작성 |
+| `@verify` | 교차검증 | Gemini + Codex | 병렬 → 비교 | IAM 정책, 보안 변경, 코드 리뷰 |
+| `@mobilize` | 총동원 | Kiro → Codex → Gemini | 순차 | 프로덕션 장애, 배포, DB 마이그레이션 |
+| `@build` | 스펙→구현 | Kiro → Codex | 순차 | 리팩토링, API 마이그레이션, 신규 기능 |
 
 ### 모드 선택 가이드
 
 ```
-"빨리 파악해야 해"          → #scan
-"정확해야 해"              → #craft
-"설계부터 해야 해"          → #design
-"두 번 확인해야 해"         → #verify
-"절대 실패하면 안 돼"       → #mobilize
-"설계하고 바로 구현까지"     → #build
-"간단한 거"               → #ask
+"빨리 파악해야 해"          → @scan
+"정확해야 해"              → @craft
+"설계부터 해야 해"          → @design
+"두 번 확인해야 해"         → @verify
+"절대 실패하면 안 돼"       → @mobilize
+"설계하고 바로 구현까지"     → @build
+"간단한 거"               → @ask
 ```
 
 ---
@@ -145,7 +145,7 @@ mobilize → verify  장애가 아닌 일반 배포
 
 ### Fallback
 
-- Slave 타임아웃 → Master가 `#ask`로 fallback
+- Slave 타임아웃 → Master가 `@ask`로 fallback
 - Slave 2회 연속 실패 → 해당 세션 동안 비활성화
 - 전체 Slave 실패 → Master 단독 + 사용자 상황 보고
 
@@ -244,15 +244,21 @@ cd multi-agent
 
 **방법 1: Claude Code 내에서 직접 (권장)**
 
-Claude Code 세션에서 프롬프트 앞에 `#모드`를 붙입니다.
+기본적으로 Master가 프롬프트를 분석하여 자동으로 최적 모드를 선택합니다.
+수동 오버라이드가 필요하면 `@모드`를 프롬프트 앞에 붙입니다.
 
 ```
-#scan 최근 1시간 CloudWatch 로그에서 에러 패턴 분석해줘
-#verify 이 IAM 정책 검토해줘
-#mobilize 프로덕션 DB에 컬럼 추가 — 5천만 건, 무중단 필수
+# 자동 감지 (Master가 모드를 자동 선택)
+최근 1시간 CloudWatch 로그에서 에러 패턴 분석해줘        → Master가 @scan 자동 선택
+이 IAM 정책 검토해줘                                   → Master가 @verify 자동 선택
+
+# 수동 오버라이드 (@모드 명시)
+@scan 최근 1시간 CloudWatch 로그에서 에러 패턴 분석해줘
+@verify 이 IAM 정책 검토해줘
+@mobilize 프로덕션 DB에 컬럼 추가 — 5천만 건, 무중단 필수
 ```
 
-Master(Claude)가 모드를 판단하고 `ai-delegate.sh`를 통해 Slave를 위임합니다.
+Master(Claude)가 모드를 자동 판단하거나 사용자 지정 모드를 사용하여 `ai-delegate.sh`를 통해 Slave를 위임합니다.
 
 **방법 2: 스크립트 직접 실행**
 
@@ -279,21 +285,21 @@ bash scripts/validate.sh all
 
 | 편 | UC | 시나리오 | 모드 |
 |----|-----|---------|------|
-| **DevOps** | UC1 | IAM 정책 변경 검토 | `#verify` |
-| | UC2 | CloudWatch 로그 대량 분석 | `#scan` |
-| | UC3 | Terraform 모듈 리팩토링 | `#build` |
-| | UC4 | CI/CD 파이프라인 장애 대응 | `#mobilize` |
-| | UC5 | ECS 오토스케일링 튜닝 | `#craft` |
-| **SRE** | UC6 | 프로덕션 P1 장애 대응 | `#mobilize` |
-| | UC7 | SLO 기반 알림 설정 | `#verify` |
-| | UC8 | 비용 이상 탐지 분석 | `#scan` |
-| | UC9 | 재해복구(DR) 런북 작성 | `#design` |
-| | UC10 | 보안 감사 대응 자동화 | `#verify`→`#mobilize` |
-| **Developer** | UC11 | 레거시 API 마이그레이션 | `#build` |
-| | UC12 | 유닛 테스트 일괄 생성 | `#craft` |
-| | UC13 | PR 코드 리뷰 자동화 | `#verify` |
-| | UC14 | 신규 마이크로서비스 설계 | `#design` |
-| | UC15 | 프로덕션 DB 마이그레이션 | `#mobilize` |
+| **DevOps** | UC1 | IAM 정책 변경 검토 | `@verify` |
+| | UC2 | CloudWatch 로그 대량 분석 | `@scan` |
+| | UC3 | Terraform 모듈 리팩토링 | `@build` |
+| | UC4 | CI/CD 파이프라인 장애 대응 | `@mobilize` |
+| | UC5 | ECS 오토스케일링 튜닝 | `@craft` |
+| **SRE** | UC6 | 프로덕션 P1 장애 대응 | `@mobilize` |
+| | UC7 | SLO 기반 알림 설정 | `@verify` |
+| | UC8 | 비용 이상 탐지 분석 | `@scan` |
+| | UC9 | 재해복구(DR) 런북 작성 | `@design` |
+| | UC10 | 보안 감사 대응 자동화 | `@verify`→`@mobilize` |
+| **Developer** | UC11 | 레거시 API 마이그레이션 | `@build` |
+| | UC12 | 유닛 테스트 일괄 생성 | `@craft` |
+| | UC13 | PR 코드 리뷰 자동화 | `@verify` |
+| | UC14 | 신규 마이크로서비스 설계 | `@design` |
+| | UC15 | 프로덕션 DB 마이그레이션 | `@mobilize` |
 
 ---
 
@@ -387,19 +393,19 @@ Multi-Agent CLI is an orchestration system where Claude (Master) coordinates thr
 ### System Flow
 
 ```
-User Prompt (#mode + task description)
+User Prompt (@mode override or auto-detect)
     │
     ▼
 ┌─────────────────────────────────┐
 │          Claude (Master)         │
-│  Mode detection → Auto-escalate │
+│  Auto-detect mode → Escalate →  │
 │  → Delegate or solo             │
 └──────────┬──────────────────────┘
            │
      ┌─────┼──────────┬──────────────┐
      │     │          │              │
      ▼     ▼          ▼              ▼
-  #ask   #scan     #craft         #design
+  @ask   @scan     @craft         @design
   Master  Gemini     Codex          Kiro
   ask     (45s)      (90s)         (120s)
            │          │              │
@@ -407,7 +413,7 @@ User Prompt (#mode + task description)
      ┌─────┴──────────┴──────────────┘
      │
      ▼
-  #verify         #mobilize              #build
+  @verify         @mobilize              @build
   Gemini+Codex    Kiro→Codex→Gemini      Kiro→Codex
   (parallel→      (sequential→           (spec→implement
    compare)        Go/No-Go)              →gap analysis)
@@ -422,30 +428,30 @@ User Prompt (#mode + task description)
 
 ## 7 Execution Modes
 
-Users prefix their prompt with `#mode` to select the execution mode.
+By default, Master auto-detects the optimal mode from your prompt. To override, prefix with `@mode`.
 
 ### Mode Details
 
 | Mode | Name | Agent(s) | Execution | Best For |
 |------|------|----------|-----------|----------|
-| `#ask` | Solo | Claude | Single | Simple questions, file edits |
-| `#scan` | Speed First | Gemini | Single | Log analysis, cost queries, bulk data |
-| `#craft` | Precision First | Codex | Single | Code changes, tests, config validation |
-| `#design` | Design First | Kiro | Single | Requirements, architecture, runbooks |
-| `#verify` | Cross-Validation | Gemini + Codex | Parallel → Compare | IAM policies, security changes, code review |
-| `#mobilize` | Full Pipeline | Kiro → Codex → Gemini | Sequential | Production incidents, deployments, DB migrations |
-| `#build` | Spec-to-Impl | Kiro → Codex | Sequential | Refactoring, API migration, new features |
+| `@ask` | Solo | Claude | Single | Simple questions, file edits |
+| `@scan` | Speed First | Gemini | Single | Log analysis, cost queries, bulk data |
+| `@craft` | Precision First | Codex | Single | Code changes, tests, config validation |
+| `@design` | Design First | Kiro | Single | Requirements, architecture, runbooks |
+| `@verify` | Cross-Validation | Gemini + Codex | Parallel → Compare | IAM policies, security changes, code review |
+| `@mobilize` | Full Pipeline | Kiro → Codex → Gemini | Sequential | Production incidents, deployments, DB migrations |
+| `@build` | Spec-to-Impl | Kiro → Codex | Sequential | Refactoring, API migration, new features |
 
 ### Mode Selection Guide
 
 ```
-"I need this fast"              → #scan
-"This must be exact"            → #craft
-"Design it first"               → #design
-"Double-check this"             → #verify
-"This cannot fail"              → #mobilize
-"Design then implement"         → #build
-"Just a quick thing"            → #ask
+"I need this fast"              → @scan
+"This must be exact"            → @craft
+"Design it first"               → @design
+"Double-check this"             → @verify
+"This cannot fail"              → @mobilize
+"Design then implement"         → @build
+"Just a quick thing"            → @ask
 ```
 
 ---
@@ -476,7 +482,7 @@ mobilize → verify  Non-incident deployments, low-risk changes
 
 ### Fallback
 
-- Slave timeout → Master falls back to `#ask`
+- Slave timeout → Master falls back to `@ask`
 - Slave fails twice → Disabled for current session
 - All Slaves fail → Master solo + user notification
 
@@ -575,15 +581,20 @@ cd multi-agent
 
 **Method 1: Inside Claude Code (recommended)**
 
-Prefix your prompt with `#mode` in a Claude Code session.
+By default, Master auto-detects the optimal mode. To override, prefix with `@mode`.
 
 ```
-#scan  Analyze CloudWatch error patterns from the last hour
-#verify  Review this IAM policy
-#mobilize  Add column to production DB — 50M rows, zero downtime required
+# Auto-detect (Master selects the mode automatically)
+Analyze CloudWatch error patterns from the last hour     → Master auto-selects @scan
+Review this IAM policy                                   → Master auto-selects @verify
+
+# Manual override (@mode prefix)
+@scan  Analyze CloudWatch error patterns from the last hour
+@verify  Review this IAM policy
+@mobilize  Add column to production DB — 50M rows, zero downtime required
 ```
 
-Master (Claude) determines the mode and delegates via `ai-delegate.sh`.
+Master (Claude) auto-detects the mode or uses your override, then delegates via `ai-delegate.sh`.
 
 **Method 2: Direct script execution**
 
@@ -610,21 +621,21 @@ Full document: [`docs/superpowers/specs/2026-03-26-usecase-catalog-design.md`](d
 
 | Role | UC | Scenario | Mode |
 |------|-----|---------|------|
-| **DevOps** | UC1 | IAM policy review | `#verify` |
-| | UC2 | CloudWatch bulk log analysis | `#scan` |
-| | UC3 | Terraform module refactoring | `#build` |
-| | UC4 | CI/CD pipeline incident | `#mobilize` |
-| | UC5 | ECS autoscaling tuning | `#craft` |
-| **SRE** | UC6 | Production P1 incident response | `#mobilize` |
-| | UC7 | SLO-based alerting setup | `#verify` |
-| | UC8 | Cost anomaly detection | `#scan` |
-| | UC9 | Disaster recovery runbook | `#design` |
-| | UC10 | Security audit automation | `#verify`→`#mobilize` |
-| **Developer** | UC11 | Legacy API migration | `#build` |
-| | UC12 | Bulk unit test generation | `#craft` |
-| | UC13 | PR code review automation | `#verify` |
-| | UC14 | New microservice design | `#design` |
-| | UC15 | Production DB migration | `#mobilize` |
+| **DevOps** | UC1 | IAM policy review | `@verify` |
+| | UC2 | CloudWatch bulk log analysis | `@scan` |
+| | UC3 | Terraform module refactoring | `@build` |
+| | UC4 | CI/CD pipeline incident | `@mobilize` |
+| | UC5 | ECS autoscaling tuning | `@craft` |
+| **SRE** | UC6 | Production P1 incident response | `@mobilize` |
+| | UC7 | SLO-based alerting setup | `@verify` |
+| | UC8 | Cost anomaly detection | `@scan` |
+| | UC9 | Disaster recovery runbook | `@design` |
+| | UC10 | Security audit automation | `@verify`→`@mobilize` |
+| **Developer** | UC11 | Legacy API migration | `@build` |
+| | UC12 | Bulk unit test generation | `@craft` |
+| | UC13 | PR code review automation | `@verify` |
+| | UC14 | New microservice design | `@design` |
+| | UC15 | Production DB migration | `@mobilize` |
 
 ---
 

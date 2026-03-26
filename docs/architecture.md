@@ -28,7 +28,7 @@
 
 ### Orchestrator Script
 - `scripts/ai-delegate.sh`: Slave 실행, 타임아웃 관리, 결과 수집
-- 7가지 모드: ask, scan, craft, design, verify, mobilize, build
+- 7가지 모드: @ask, @scan, @craft, @design, @verify, @mobilize, @build
 
 ### Policy Hub
 - `claude-policies/common/`: 공통 정책 (4-Block Format, AWS 컨벤션, 보안 기준)
@@ -42,19 +42,19 @@
     ▼
 Claude (Master)
     │
-    ├── #ask ──────→ Master 단독 처리
+    ├── @ask ──────→ Master 단독 처리
     │
-    ├── #scan ─────→ Gemini(Speed) ────→ Master 검증
+    ├── @scan ─────→ Gemini(Speed) ────→ Master 검증
     │
-    ├── #craft ────→ Codex(Precision) ──→ Master 검증
+    ├── @craft ────→ Codex(Precision) ──→ Master 검증
     │
-    ├── #design ───→ Kiro(Spec) ────────→ Master 검증
+    ├── @design ───→ Kiro(Spec) ────────→ Master 검증
     │
-    ├── #verify ───→ Gemini + Codex (병렬) ──→ Master 비교 판정
+    ├── @verify ───→ Gemini + Codex (병렬) ──→ Master 비교 판정
     │
-    ├── #mobilize ─→ Kiro → Codex → Gemini (순차) ──→ Master Go/No-Go
+    ├── @mobilize ─→ Kiro → Codex → Gemini (순차) ──→ Master Go/No-Go
     │
-    └── #build ────→ Kiro(스펙) → Codex(구현) ──→ Master 갭 분석
+    └── @build ────→ Kiro(스펙) → Codex(구현) ──→ Master 갭 분석
 ```
 
 모든 출력은 4-Block Format (결론/근거/리스크/실행안)을 따릅니다.

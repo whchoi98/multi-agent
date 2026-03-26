@@ -88,7 +88,7 @@ Gemini 실행 실패 (timeout: ${timeout}s)
 타임아웃 초과 또는 실행 오류
 
 ## 리스크
-결과 없음 — Master가 ask로 fallback 필요
+결과 없음 — Master가 @ask로 fallback 필요
 
 ## 실행안
 Master가 직접 처리하거나 다른 Slave로 재시도" > "$output_file"
@@ -163,7 +163,7 @@ Master가 직접 설계하거나 Codex로 대체" > "$output_file"
 
 mode_scan() {
     local prompt="$1"
-    log "모드: ${GREEN}#scan${NC} — Gemini 단독 (속도 우선)"
+    log "모드: ${GREEN}@scan${NC} — Gemini 단독 (속도 우선)"
     echo "---"
     echo "## Gemini (Speed Slave) 결과"
     echo ""
@@ -172,7 +172,7 @@ mode_scan() {
 
 mode_craft() {
     local prompt="$1"
-    log "모드: ${PURPLE}#craft${NC} — Codex 단독 (정밀도 우선)"
+    log "모드: ${PURPLE}@craft${NC} — Codex 단독 (정밀도 우선)"
     echo "---"
     echo "## Codex (Precision Slave) 결과"
     echo ""
@@ -181,7 +181,7 @@ mode_craft() {
 
 mode_design() {
     local prompt="$1"
-    log "모드: ${CYAN}#design${NC} — Kiro 단독 (설계/스펙 생성)"
+    log "모드: ${CYAN}@design${NC} — Kiro 단독 (설계/스펙 생성)"
     echo "---"
     echo "## Kiro (Spec Slave) 결과"
     echo ""
@@ -190,7 +190,7 @@ mode_design() {
 
 mode_verify() {
     local prompt="$1"
-    log "모드: ${YELLOW}#verify${NC} — Gemini + Codex 병렬 → Master 비교 판정"
+    log "모드: ${YELLOW}@verify${NC} — Gemini + Codex 병렬 → Master 비교 판정"
 
     # 병렬 실행
     run_gemini "$prompt" "$TIMEOUT_SCAN" > "${RESULTS_DIR}/gemini_result.md" 2>&1 &
@@ -224,7 +224,7 @@ mode_verify() {
 
 mode_mobilize() {
     local prompt="$1"
-    log "모드: ${RED}#mobilize${NC} — 4-Agent 순차 실행 (최고 위험)"
+    log "모드: ${RED}@mobilize${NC} — 4-Agent 순차 실행 (최고 위험)"
 
     echo "---"
     echo "## Mobilize Mode: 4-Agent 순차 실행"
@@ -281,7 +281,7 @@ ${prompt}"
 
 mode_build() {
     local prompt="$1"
-    log "모드: ${CYAN}#build${NC} — Kiro(스펙) → Codex(구현) → Master 판정"
+    log "모드: ${CYAN}@build${NC} — Kiro(스펙) → Codex(구현) → Master 판정"
 
     echo "---"
     echo "## Build Mode: Spec-Driven Implementation"
@@ -323,18 +323,18 @@ print_escalation_guide() {
 ## 자동 승격/다운그레이드 규칙 (Master 참고용)
 
 ### 승격 (더 신중하게)
-- ask → verify   : 보안 관련 코드 변경 (IAM, SG, 인증, 암호화)
-- ask → mobilize : 프로덕션 배포/롤백, 데이터 삭제, 인프라 변경
-- ask → design   : 신규 기능 설계, 아키텍처 변경
-- scan → verify  : Gemini 결과에 보안 리스크 감지
+- @ask → @verify   : 보안 관련 코드 변경 (IAM, SG, 인증, 암호화)
+- @ask → @mobilize : 프로덕션 배포/롤백, 데이터 삭제, 인프라 변경
+- @ask → @design   : 신규 기능 설계, 아키텍처 변경
+- @scan → @verify  : Gemini 결과에 보안 리스크 감지
 
 ### 다운그레이드 (더 효율적으로)
-- verify → scan    : AWS 대량 읽기 조회 (Codex sandbox 네트워크 제한)
-- verify → ask     : SSM 기반 트러블슈팅 (Slave 타임아웃)
-- verify → ask     : 대규모 레거시 코드베이스 탐색
-- design → ask     : 단순 설정 변경 (Kiro 오버헤드)
-- build → craft    : 스펙 불필요한 단순 코드 변경
-- mobilize → verify: 장애 아닌 일반 배포
+- @verify → @scan    : AWS 대량 읽기 조회 (Codex sandbox 네트워크 제한)
+- @verify → @ask     : SSM 기반 트러블슈팅 (Slave 타임아웃)
+- @verify → @ask     : 대규모 레거시 코드베이스 탐색
+- @design → @ask     : 단순 설정 변경 (Kiro 오버헤드)
+- @build → @craft    : 스펙 불필요한 단순 코드 변경
+- @mobilize → @verify: 장애 아닌 일반 배포
 
 GUIDE
 }

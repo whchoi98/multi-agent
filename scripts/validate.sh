@@ -112,14 +112,14 @@ master_box() {
 }
 
 # ============================================================
-# 검증 1: #ask 자동 승격 → #verify
-# 사용자가 ask로 보안 작업을 요청했을 때 자동 승격 여부
+# 검증 1: @ask 자동 승격 → @verify
+# 사용자가 @ask로 보안 작업을 요청했을 때 자동 승격 여부
 # ============================================================
 validate_auto_escalation() {
-    section "검증 1: 자동 승격 (#ask → #verify)"
+    section "검증 1: 자동 승격 (@ask → @verify)"
 
     echo -e "  ${DIM}시나리오: 사용자가 모드 없이 보안 관련 변경을 요청${NC}"
-    echo -e "  ${DIM}기대 결과: Master가 IAM 키워드를 감지하여 자동으로 #verify 승격${NC}"
+    echo -e "  ${DIM}기대 결과: Master가 IAM 키워드를 감지하여 자동으로 @verify 승격${NC}"
 
     prompt "staging 환경 Lambda에 SQS 접근 IAM 정책 추가해줘"
 
@@ -127,8 +127,8 @@ validate_auto_escalation() {
     echo -e "  ${BLUE}[Master]${NC} 프롬프트 분석 중..."
     [[ $ANIM -eq 1 ]] && sleep 1 || true
     echo -e "  ${BLUE}[Master]${NC} 키워드 감지: ${YELLOW}IAM${NC}, ${YELLOW}정책${NC}"
-    echo -e "  ${BLUE}[Master]${NC} 승격 규칙 매칭: ${DIM}\"ask → verify: 보안 관련 코드 변경 (IAM, SG, 인증)\"${NC}"
-    echo -e "  ${BLUE}[Master]${NC} ${YELLOW}⚡ 자동 승격: ask → #verify${NC}"
+    echo -e "  ${BLUE}[Master]${NC} 승격 규칙 매칭: ${DIM}\"@ask → @verify: 보안 관련 코드 변경 (IAM, SG, 인증)\"${NC}"
+    echo -e "  ${BLUE}[Master]${NC} ${YELLOW}⚡ 자동 승격: @ask → @verify${NC}"
     echo ""
 
     subsection "검증 항목"
@@ -142,28 +142,28 @@ validate_auto_escalation() {
     # 검증 1-2: 승격 규칙 정확성
     echo ""
     echo -e "    ${DIM}1-2. 승격 대상 모드 정확성${NC}"
-    echo -e "         규칙: ask → verify (보안 관련)"
-    echo -e "         결과: verify (Gemini + Codex 병렬)"
-    check_pass "승격 대상 모드 verify 정확"
+    echo -e "         규칙: @ask → @verify (보안 관련)"
+    echo -e "         결과: @verify (Gemini + Codex 병렬)"
+    check_pass "승격 대상 모드 @verify 정확"
 
     # 검증 1-3: critical로 과승격하지 않는지
     echo ""
     echo -e "    ${DIM}1-3. 과승격 방지${NC}"
     echo -e "         \"staging 환경\" → 프로덕션 아님"
-    echo -e "         verify가 적절. mobilize는 프로덕션 변경에만."
-    check_pass "staging이므로 mobilize로 과승격하지 않음"
+    echo -e "         @verify가 적절. @mobilize는 프로덕션 변경에만."
+    check_pass "staging이므로 @mobilize로 과승격하지 않음"
 
     # 검증 1-4: 사용자에게 승격 사실 고지
     echo ""
     echo -e "    ${DIM}1-4. 승격 사실 사용자 고지${NC}"
-    echo -e "         Master가 \"자동 승격: ask → #verify\" 메시지 출력"
+    echo -e "         Master가 \"자동 승격: @ask → @verify\" 메시지 출력"
     check_pass "사용자에게 승격 사실 투명하게 고지"
 
     separator
 
     # 실제 실행
     echo ""
-    echo -e "  ${DIM}실제 #verify 실행 시뮬레이션...${NC}"
+    echo -e "  ${DIM}실제 @verify 실행 시뮬레이션...${NC}"
 
     agent_box "Gemini" "$CYAN" "Speed Slave" "45s"
     wait_spinner 2 "SQS 접근 IAM 정책 생성..."
@@ -242,24 +242,24 @@ EOF
 
     echo ""
     subsection "검증 1 결과"
-    check_pass "자동 승격 시 Gemini+Codex 병렬 실행 정상 (#verify)"
+    check_pass "자동 승격 시 Gemini+Codex 병렬 실행 정상 (@verify)"
     check_pass "Master의 비교 판정에서 더 안전한 Codex 채택"
     check_pass "4-Block Format 준수 (양쪽 모두)"
 }
 
 # ============================================================
-# 검증 2: #design 단독 실행 — Kiro의 설계 품질
+# 검증 2: @design 단독 실행 — Kiro의 설계 품질
 # ============================================================
 validate_design_mode() {
-    section "검증 2: #design 단독 — Kiro 설계 품질"
+    section "검증 2: @design 단독 — Kiro 설계 품질"
 
     echo -e "  ${DIM}시나리오: 신규 알림 시스템 마이크로서비스 설계 요청${NC}"
     echo -e "  ${DIM}기대 결과: Kiro가 요구사항/설계/태스크/체크리스트를 구조화하여 출력${NC}"
 
-    prompt "#design Slack/Email/SMS를 통합하는 알림 마이크로서비스 설계해줘. 일 100만 건 처리 필요."
+    prompt "@design Slack/Email/SMS를 통합하는 알림 마이크로서비스 설계해줘. 일 100만 건 처리 필요."
 
     echo ""
-    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${CYAN}#design${NC} → Kiro 단독 위임"
+    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${CYAN}@design${NC} → Kiro 단독 위임"
     echo -e "  ${BLUE}[Master]${NC} ai-delegate.sh design 호출..."
 
     agent_box "Kiro CLI" "$CYAN" "Spec Slave" "120s"
@@ -333,8 +333,8 @@ validate_design_mode() {
     - DynamoDB 발송 이력: 100만 건/일 → TTL로 30일 후 자동 삭제 설정 필요
 
     ## 실행안
-    1. T1~T6: Codex가 Terraform + Lambda 코드 구현 (#build 모드 권장)
-    2. T7: Gemini가 CloudWatch 대시보드 생성 (#scan)
+    1. T1~T6: Codex가 Terraform + Lambda 코드 구현 (@build 모드 권장)
+    2. T7: Gemini가 CloudWatch 대시보드 생성 (@scan)
     3. T8: 구현 완료 후 통합 테스트
     4. SES 샌드박스 해제 → SMS 한도 증가는 병렬로 진행 (1주 소요)
 EOF
@@ -382,8 +382,8 @@ EOF
     # 검증 2-6: 후속 에이전트 연결
     echo ""
     echo -e "    ${DIM}2-6. 실행안에서 후속 에이전트 모드 권장이 적절한가?${NC}"
-    echo -e "         T1~T6 → #build (스펙 기반 구현) → 적절"
-    echo -e "         T7 → #scan (대시보드 생성) → 적절"
+    echo -e "         T1~T6 → @build (스펙 기반 구현) → 적절"
+    echo -e "         T7 → @scan (대시보드 생성) → 적절"
     echo -e "         SES/SMS 한도 → 수동 (AWS 콘솔) → 적절"
     check_pass "후속 모드 권장이 각 태스크 특성에 맞음"
 
@@ -395,19 +395,19 @@ EOF
 }
 
 # ============================================================
-# 검증 3: #build — 스펙→구현 파이프라인 (데이터 무결성)
+# 검증 3: @build — 스펙→구현 파이프라인 (데이터 무결성)
 # Kiro 스펙의 항목이 Codex 구현에 얼마나 반영되는지 검증
 # ============================================================
 validate_build_mode() {
-    section "검증 3: #build — 스펙↔구현 정합성 검증"
+    section "검증 3: @build — 스펙↔구현 정합성 검증"
 
     echo -e "  ${DIM}시나리오: DynamoDB 스트림으로 실시간 변경 감지 → ElastiCache 무효화${NC}"
     echo -e "  ${DIM}검증 포인트: Kiro 스펙의 각 항목이 Codex 구현에 반영되는지 추적${NC}"
 
-    prompt "#build DynamoDB 스트림으로 product 테이블 변경 감지해서 ElastiCache 캐시 자동 무효화해줘"
+    prompt "@build DynamoDB 스트림으로 product 테이블 변경 감지해서 ElastiCache 캐시 자동 무효화해줘"
 
     echo ""
-    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${CYAN}#build${NC} → Kiro(스펙) → Codex(구현) 순차"
+    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${CYAN}@build${NC} → Kiro(스펙) → Codex(구현) 순차"
 
     # Step 1: Kiro
     agent_box "Kiro CLI" "$CYAN" "Step 1/2 — 스펙 생성" "120s"
@@ -600,19 +600,19 @@ EOF
 }
 
 # ============================================================
-# 검증 4: #mobilize — 4-Agent 순차 실행 데이터 흐름
+# 검증 4: @mobilize — 4-Agent 순차 실행 데이터 흐름
 # 각 단계의 출력이 다음 단계의 입력으로 정확히 전달되는지 검증
 # ============================================================
 validate_mobilize_data_flow() {
-    section "검증 4: #mobilize — 단계 간 데이터 흐름 검증"
+    section "검증 4: @mobilize — 단계 간 데이터 흐름 검증"
 
     echo -e "  ${DIM}시나리오: Kubernetes 클러스터 노드 그룹 인스턴스 타입 변경${NC}"
     echo -e "  ${DIM}검증 포인트: Kiro→Codex→Gemini 각 단계의 출력이 다음 입력에 반영되는지${NC}"
 
-    prompt "#mobilize EKS prod-cluster 노드그룹 m5.xlarge → m6i.xlarge 마이그레이션"
+    prompt "@mobilize EKS prod-cluster 노드그룹 m5.xlarge → m6i.xlarge 마이그레이션"
 
     echo ""
-    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${RED}#mobilize${NC} → 4-Agent 순차"
+    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${RED}@mobilize${NC} → 4-Agent 순차"
     echo -e "  ${BLUE}[Master]${NC} 파이프라인: Kiro → Codex → Gemini → Master"
 
     # Step 1: Kiro
@@ -738,13 +738,13 @@ EOF
 validate_timeout_fallback() {
     section "검증 5: 타임아웃 fallback 및 에러 핸들링"
 
-    echo -e "  ${DIM}시나리오: #build 모드에서 Kiro가 타임아웃, Codex는 실행 불가${NC}"
+    echo -e "  ${DIM}시나리오: @build 모드에서 Kiro가 타임아웃, Codex는 실행 불가${NC}"
     echo -e "  ${DIM}검증 포인트: 타임아웃 시 graceful fallback이 동작하는가?${NC}"
 
-    prompt "#build 전체 마이크로서비스 아키텍처를 모놀리스에서 분리하는 설계 + 구현해줘"
+    prompt "@build 전체 마이크로서비스 아키텍처를 모놀리스에서 분리하는 설계 + 구현해줘"
 
     echo ""
-    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${CYAN}#build${NC} → Kiro → Codex 순차"
+    echo -e "  ${BLUE}[Master]${NC} 모드 감지: ${CYAN}@build${NC} → Kiro → Codex 순차"
 
     # Step 1: Kiro — 타임아웃
     agent_box "Kiro CLI" "$CYAN" "Step 1/2 — 스펙 생성" "120s"
@@ -761,25 +761,25 @@ validate_timeout_fallback() {
     subsection "Fallback 판단 과정"
     echo ""
     echo -e "    ${DIM}Step 1: Kiro 타임아웃 → 스펙 없음${NC}"
-    echo -e "    ${DIM}Step 2: 스펙 없이 Codex 실행 가능? → 아니오 (build 모드는 스펙 필수)${NC}"
-    echo -e "    ${DIM}Step 3: build → ask 다운그레이드${NC}"
+    echo -e "    ${DIM}Step 2: 스펙 없이 Codex 실행 가능? → 아니오 (@build 모드는 스펙 필수)${NC}"
+    echo -e "    ${DIM}Step 3: @build → @ask 다운그레이드${NC}"
     echo -e "    ${DIM}Step 4: Master가 직접 처리 + 작업 범위 축소 제안${NC}"
     echo ""
 
-    echo -e "  ${YELLOW}[Master]${NC} ${BOLD}⚡ build → ask 다운그레이드${NC}"
+    echo -e "  ${YELLOW}[Master]${NC} ${BOLD}⚡ @build → @ask 다운그레이드${NC}"
     echo -e "  ${YELLOW}[Master]${NC} 사유: Kiro 타임아웃 — 작업 범위가 단일 세션에 부적합"
 
-    agent_box "Claude (Master)" "$GREEN" "ask 모드로 직접 처리" "제한 없음"
+    agent_box "Claude (Master)" "$GREEN" "@ask 모드로 직접 처리" "제한 없음"
     echo ""
     cat << 'EOF'
     ## 결론
     전체 마이크로서비스 분리는 단일 프롬프트로 처리할 수 없습니다.
-    서비스별로 분리하여 #build 모드를 반복 실행하세요.
+    서비스별로 분리하여 @build 모드를 반복 실행하세요.
 
     ## 근거
     - 마이크로서비스 분리는 도메인 분석, API 설계, 데이터 분리, 배포 전략 등
       수십 개의 의사결정이 필요한 프로젝트급 작업
-    - 단일 #build 세션(120s + 90s)으로는 스펙 생성조차 불가능
+    - 단일 @build 세션(120s + 90s)으로는 스펙 생성조차 불가능
     - Kiro가 120초 타임아웃으로 실패한 것이 이를 증명
 
     ## 리스크
@@ -787,10 +787,10 @@ validate_timeout_fallback() {
 
     ## 실행안
     작업을 서비스 단위로 분할하세요:
-    1. #design 현재 모놀리스의 도메인 바운더리 분석
-    2. #build 인증 서비스 분리 (auth-service)
-    3. #build 결제 서비스 분리 (payment-service)
-    4. #build 알림 서비스 분리 (notification-service)
+    1. @design 현재 모놀리스의 도메인 바운더리 분석
+    2. @build 인증 서비스 분리 (auth-service)
+    3. @build 결제 서비스 분리 (payment-service)
+    4. @build 알림 서비스 분리 (notification-service)
     ...서비스별 반복
 EOF
 
@@ -810,9 +810,9 @@ EOF
 
     # 검증 5-3: ask fallback
     echo ""
-    echo -e "    ${DIM}5-3. ask로 정상 다운그레이드하는가?${NC}"
-    echo -e "         build → ask 다운그레이드 + Master 직접 처리"
-    check_pass "build → ask 다운그레이드 정상"
+    echo -e "    ${DIM}5-3. @ask로 정상 다운그레이드하는가?${NC}"
+    echo -e "         @build → @ask 다운그레이드 + Master 직접 처리"
+    check_pass "@build → @ask 다운그레이드 정상"
 
     # 검증 5-4: 사용자에게 원인 설명
     echo ""
@@ -823,23 +823,23 @@ EOF
     # 검증 5-5: 작업 분할 가이드
     echo ""
     echo -e "    ${DIM}5-5. 분할 가이드가 실행 가능한가?${NC}"
-    echo -e "         #design(도메인 분석) → #build(서비스별 분리) 반복 패턴 제시"
+    echo -e "         @design(도메인 분석) → @build(서비스별 분리) 반복 패턴 제시"
     check_pass "분할 가이드가 구체적이고 실행 가능함"
 }
 
 # ============================================================
-# 검증 6: #verify에서 두 에이전트가 동일 결과를 낸 경우
+# 검증 6: @verify에서 두 에이전트가 동일 결과를 낸 경우
 # ============================================================
 validate_verify_agreement() {
-    section "검증 6: #verify — 두 에이전트 결과 일치 시 판정"
+    section "검증 6: @verify — 두 에이전트 결과 일치 시 판정"
 
     echo -e "  ${DIM}시나리오: 간단한 S3 버킷 정책 — Gemini와 Codex가 동일한 결과${NC}"
     echo -e "  ${DIM}검증 포인트: 결과가 동일할 때 Master가 불필요한 차이점을 만들어내지 않는가?${NC}"
 
-    prompt "#verify CloudFront에서 S3 오리진 접근 OAC 정책 작성해줘"
+    prompt "@verify CloudFront에서 S3 오리진 접근 OAC 정책 작성해줘"
 
     echo ""
-    echo -e "  ${BLUE}[Master]${NC} 모드: ${YELLOW}#verify${NC} → Gemini + Codex 병렬"
+    echo -e "  ${BLUE}[Master]${NC} 모드: ${YELLOW}@verify${NC} → Gemini + Codex 병렬"
 
     echo ""
     echo -e "    ${CYAN}Gemini${NC} ━▶ ${DIM}병렬 실행 중...${NC}"
@@ -937,12 +937,12 @@ print_summary() {
     echo -e "  ┌────────────────────────────────────────────────────────────┐"
     echo -e "  │ 검증 항목                               결과              │"
     echo -e "  ├────────────────────────────────────────────────────────────┤"
-    echo -e "  │ 1. 자동 승격 (ask → verify)              ${GREEN}PASS (4/4)${NC}       │"
-    echo -e "  │ 2. #design 단독 — Kiro 설계 품질         ${GREEN}PASS (7/7)${NC}       │"
-    echo -e "  │ 3. #build — 스펙↔구현 정합성             ${GREEN}PASS 5${NC} ${YELLOW}WARN 2${NC}    │"
-    echo -e "  │ 4. #mobilize — 단계 간 데이터 흐름       ${GREEN}PASS (5/5)${NC}       │"
+    echo -e "  │ 1. 자동 승격 (@ask → @verify)             ${GREEN}PASS (4/4)${NC}       │"
+    echo -e "  │ 2. @design 단독 — Kiro 설계 품질         ${GREEN}PASS (7/7)${NC}       │"
+    echo -e "  │ 3. @build — 스펙↔구현 정합성             ${GREEN}PASS 5${NC} ${YELLOW}WARN 2${NC}    │"
+    echo -e "  │ 4. @mobilize — 단계 간 데이터 흐름       ${GREEN}PASS (5/5)${NC}       │"
     echo -e "  │ 5. 타임아웃 fallback                     ${GREEN}PASS (5/5)${NC}       │"
-    echo -e "  │ 6. #verify 결과 일치 시 판정             ${GREEN}PASS (3/3)${NC}       │"
+    echo -e "  │ 6. @verify 결과 일치 시 판정             ${GREEN}PASS (3/3)${NC}       │"
     echo -e "  └────────────────────────────────────────────────────────────┘"
     echo ""
     echo -e "  ${BOLD}총계:${NC} ${GREEN}PASS ${PASS_COUNT}${NC}  ${YELLOW}WARN ${WARN_COUNT}${NC}  ${RED}FAIL ${FAIL_COUNT}${NC}"
@@ -1000,12 +1000,12 @@ main() {
             ;;
         *)
             echo "Usage: validate.sh [1|2|3|4|5|6|all]"
-            echo "  1 — 자동 승격 (ask → verify)"
-            echo "  2 — #design 단독 (Kiro 설계 품질)"
-            echo "  3 — #build (스펙↔구현 정합성)"
-            echo "  4 — #mobilize (단계 간 데이터 흐름)"
+            echo "  1 — 자동 승격 (@ask → @verify)"
+            echo "  2 — @design 단독 (Kiro 설계 품질)"
+            echo "  3 — @build (스펙↔구현 정합성)"
+            echo "  4 — @mobilize (단계 간 데이터 흐름)"
             echo "  5 — 타임아웃 fallback"
-            echo "  6 — #verify 결과 일치 시 판정"
+            echo "  6 — @verify 결과 일치 시 판정"
             echo "  all — 전체 검증 (기본)"
             ;;
     esac

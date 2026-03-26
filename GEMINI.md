@@ -13,9 +13,9 @@ Master(Claude)의 위임을 받아 **속도 우선** 작업을 처리합니다.
 
 ## 참여 모드
 
-- `#scan` — 단독 속도 우선 처리
-- `#verify` — Codex와 병렬 실행 후 Master 비교 판정
-- `#mobilize` — 3번째 단계: Kiro→Codex 이후 영향도 분석
+- `@scan` — 단독 속도 우선 처리
+- `@verify` — Codex와 병렬 실행 후 Master 비교 판정
+- `@mobilize` — 3번째 단계: Kiro→Codex 이후 영향도 분석
 
 ## 행동 규칙
 
