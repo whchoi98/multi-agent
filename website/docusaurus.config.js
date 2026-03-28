@@ -8,10 +8,10 @@ const config = {
   favicon: 'img/favicon.ico',
 
   url: 'https://whchoi98.github.io',
-  baseUrl: '/multiagent/',
+  baseUrl: '/multi-agent/',
 
   organizationName: 'whchoi98',
-  projectName: 'multiagent',
+  projectName: 'multi-agent',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
