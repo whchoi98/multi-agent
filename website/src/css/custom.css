@@ -1,0 +1,150 @@
+/**
+ * Multi-Agent CLI — Docusaurus Custom Theme
+ */
+
+:root {
+  --ifm-color-primary: #4f46e5;
+  --ifm-color-primary-dark: #4338ca;
+  --ifm-color-primary-darker: #3730a3;
+  --ifm-color-primary-darkest: #312e81;
+  --ifm-color-primary-light: #6366f1;
+  --ifm-color-primary-lighter: #818cf8;
+  --ifm-color-primary-lightest: #a5b4fc;
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ifm-heading-font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(79, 70, 229, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #818cf8;
+  --ifm-color-primary-dark: #6366f1;
+  --ifm-color-primary-darker: #4f46e5;
+  --ifm-color-primary-darkest: #4338ca;
+  --ifm-color-primary-light: #a5b4fc;
+  --ifm-color-primary-lighter: #c7d2fe;
+  --ifm-color-primary-lightest: #e0e7ff;
+  --docusaurus-highlighted-code-line-bg: rgba(129, 140, 248, 0.15);
+}
+
+/* Admonition custom styles */
+.admonition {
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+/* Table styling */
+table {
+  display: table;
+  width: 100%;
+}
+
+table th {
+  background-color: var(--ifm-color-primary-lightest);
+  font-weight: 600;
+}
+
+[data-theme='dark'] table th {
+  background-color: rgba(129, 140, 248, 0.15);
+}
+
+/* Code block styling */
+.prism-code {
+  border-radius: 8px !important;
+}
+
+/* Sidebar styling */
+.menu__link {
+  font-size: 0.95rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.menu__link:hover {
+  background-color: rgba(79, 70, 229, 0.08);
+}
+
+.menu__link--active {
+  font-weight: 600;
+}
+
+/* Agent badge styles */
+.badge--claude {
+  background-color: #d97706;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge--gemini {
+  background-color: #4285f4;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge--codex {
+  background-color: #10a37f;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge--kiro {
+  background-color: #7c3aed;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Mode card styles */
+.mode-card {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.mode-card:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+}
+
+/* Heading anchor links */
+h2, h3, h4 {
+  scroll-margin-top: 80px;
+}
+
+/* Custom tip/warning blocks */
+blockquote {
+  border-left-color: var(--ifm-color-primary);
+  background-color: rgba(79, 70, 229, 0.04);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.5rem;
+}
+
+[data-theme='dark'] blockquote {
+  background-color: rgba(129, 140, 248, 0.06);
+}
+
+/* Flow diagram styling in code blocks */
+pre code .token.comment {
+  color: #6b7280;
+}
+
+/* Responsive table fix */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}
