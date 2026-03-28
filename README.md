@@ -38,6 +38,12 @@
   - [CLI 직접 실행](#cli-직접-실행)
 - [프로젝트 구조](#프로젝트-구조)
 - [유스케이스 카탈로그](#유스케이스-카탈로그)
+- [실전 적용 가이드](#실전-적용-가이드)
+  - [즉시 활용 가능한 사례](#즉시-활용-가능한-사례)
+  - [AWS 연동이 필요한 사례](#aws-연동이-필요한-사례)
+  - [Multi-Agent가 단독보다 확실히 나은 경우](#multi-agent가-단독보다-확실히-나은-경우)
+  - [Master 단독이 더 효율적인 경우](#master-단독이-더-효율적인-경우)
+  - [시스템의 본질적 가치](#시스템의-본질적-가치)
 - [정책 관리 (Hub & Spoke)](#정책-관리-hub--spoke)
 - [검증 및 시뮬레이션](#검증-및-시뮬레이션)
 - [제거](#제거)
@@ -508,6 +514,87 @@ multi-agent/
 
 ---
 
+## 실전 적용 가이드
+
+> 15개 유스케이스의 솔직한 현실 점검. 어디서 즉시 가치를 얻고, 어디에 추가 설정이 필요한지.
+
+### 즉시 활용 가능한 사례
+
+입력이 **코드/설정 파일/텍스트**이고, 출력이 **분석/코드/문서**인 작업은 지금 바로 실용적입니다.
+
+| UC | 시나리오 | 모드 | 왜 바로 되는가 |
+|----|---------|------|--------------|
+| UC1 | IAM 정책 검토 | `@verify` | JSON 텍스트 분석 → 교차검증 즉시 작동 |
+| UC3 | Terraform 리팩토링 | `@build` | 파일 기반 설계→구현. 외부 의존성 없음 |
+| UC5 | 오토스케일링 튜닝 | `@craft` | 설정 파일 분석 + 수정안 제시 |
+| UC9 | DR 런북 작성 | `@design` | Terraform/CloudFormation 읽고 설계 문서 생성 |
+| UC11 | API 마이그레이션 | `@build` | 설계→구현 파이프라인. 코드 생성이 핵심 |
+| UC12 | 테스트 일괄 생성 | `@craft` | 소스 분석 → 테스트 코드 생성. **가장 실용적** |
+| UC13 | PR 코드 리뷰 | `@verify` | git diff 텍스트 기반. 즉시 가능 |
+| UC14 | 마이크로서비스 설계 | `@design` | 코드 분석 → 설계 문서. Kiro 핵심 강점 |
+
+### AWS 연동이 필요한 사례
+
+**실시간 AWS API 호출**, **외부 시스템 접근**이 전제되는 작업은 추가 설정이 필요합니다.
+
+| UC | 시나리오 | 모드 | 제약 사항 |
+|----|---------|------|----------|
+| UC2 | CloudWatch 로그 분석 | `@scan` | Gemini CLI의 AWS API 호출에 네트워크/인증 설정 필요 |
+| UC4 | CI/CD 장애 대응 | `@mobilize` | GitHub Actions + Terraform state + git log 교차 확인 — Master 단독이 더 빠를 수 있음 |
+| UC6 | P1 장애 대응 | `@mobilize` | 실시간 AWS 메트릭 조회 필요. Slave 타임아웃(45~120초) 제약 |
+| UC8 | 비용 분석 | `@scan` | Cost Explorer API 호출 필요. Codex는 sandbox 네트워크 제한 |
+| UC10 | 보안 감사 | `@mobilize` | 대량 AWS API 호출 — aws cli 스크립트가 더 현실적일 수 있음 |
+| UC15 | DB 마이그레이션 | `@mobilize` | Pre-check 스크립트는 유용하지만 실행은 DBA가 직접 수행 |
+
+### Multi-Agent가 단독보다 확실히 나은 경우
+
+```
+1. 교차검증이 필요할 때 (@verify)
+   → IAM 리뷰, 코드 리뷰에서 "두 번째 눈"의 가치는 실재
+   → Gemini가 놓치는 인증 누락을 Codex가 잡고, Codex가 놓치는 컨벤션을 Gemini가 잡음
+
+2. 설계→구현 파이프라인 (@build)
+   → "설계한 것과 구현한 것이 일치하는가?" 자체 검증이 가능
+   → 단독 에이전트는 자기가 빠뜨린 것을 자기가 발견하기 어려움
+
+3. 대량 코드 생성/분석 (@craft)
+   → 테스트 생성, 리팩토링처럼 반복적이지만 정확해야 하는 작업
+   → 비즈니스 로직을 이해한 의미 있는 테스트 vs assert is not None
+```
+
+### Master 단독이 더 효율적인 경우
+
+```
+1. AWS 실시간 조회
+   → Claude가 MCP/도구로 직접 호출하는 게 Slave 위임보다 빠름
+
+2. 장애 대응 초기 5분
+   → Slave 타임아웃 기다리는 동안 상황이 악화될 수 있음
+   → Master가 먼저 빠르게 파악 후, 심층 분석만 Slave에 위임하는 것이 현실적
+
+3. 컨텍스트가 풍부한 작업
+   → 대화 맥락, 이전 작업 이력 등 Slave에게 전달하기 어려운 배경 지식이 많은 경우
+
+4. 단순 질문/수정
+   → 3-Agent 오케스트레이션 오버헤드가 답변 지연만 유발
+```
+
+### 시스템의 본질적 가치
+
+유스케이스 카탈로그의 **진짜 가치**는 특정 사례의 실행 여부가 아니라, 세 가지 구조적 이점에 있습니다.
+
+| 가치 | 설명 | 에이전트 없이도 적용 가능 |
+|------|------|----------------------|
+| **사고 프레임워크** | "이 상황에서 뭘 먼저 해야 하지?"에 대한 구조화된 접근법 | Yes — 모드 선택 가이드만으로도 의사결정 품질 향상 |
+| **4-Block Format** | 결론→근거→리스크→실행안 형식이 의사결정을 강제 구조화 | Yes — 포스트모템, 설계 리뷰에 즉시 적용 가능 |
+| **자동 승격 규칙** | "이건 더 신중하게 해야 해"를 시스템이 판단 | Yes — 체크리스트로 사용하면 사람의 판단도 개선 |
+
+> **핵심 인사이트**: 15개 사례 중 **8개는 지금 바로 실용적**이고, **7개는 AWS 연동 설정이 전제**됩니다.
+> 하지만 가장 큰 가치는 개별 사례의 실행이 아니라, **"이 작업은 어떤 수준의 신중함이 필요한가?"라는 판단 체계** 자체입니다.
+> 이것은 에이전트 없이도 팀의 의사결정을 개선합니다.
+
+---
+
 ## 정책 관리 (Hub & Spoke)
 
 정책은 `claude-policies/`에서 중앙 관리합니다. Hub만 수정하면 모든 에이전트에 반영됩니다.
@@ -604,6 +691,12 @@ rm -rf .claude/plugins/multi-agent        # 프로젝트 레벨
   - [Direct CLI Execution](#direct-cli-execution)
 - [Project Structure](#project-structure-1)
 - [Usecase Catalog](#usecase-catalog)
+- [Practical Application Guide](#practical-application-guide)
+  - [Immediately Actionable Usecases](#immediately-actionable-usecases)
+  - [Usecases Requiring AWS Integration](#usecases-requiring-aws-integration)
+  - [Where Multi-Agent Clearly Outperforms Solo](#where-multi-agent-clearly-outperforms-solo)
+  - [Where Master Solo is More Efficient](#where-master-solo-is-more-efficient)
+  - [The System's Fundamental Value](#the-systems-fundamental-value)
 - [Policy Management (Hub & Spoke)](#policy-management-hub--spoke)
 - [Validation & Simulation](#validation--simulation)
 - [Uninstall](#uninstall)
@@ -1072,6 +1165,87 @@ Full document: [`docs/superpowers/specs/2026-03-26-usecase-catalog-design.md`](d
 | UC13 | PR code review automation | `@verify` | SQL injection PoC + missing auth detected |
 | UC14 | New microservice design | `@design` | Boundary decisions + event-driven transition |
 | UC15 | Production DB migration (50M rows) | `@mobilize` | Aurora Instant DDL + pre-check + impact analysis |
+
+---
+
+## Practical Application Guide
+
+> An honest reality check of all 15 usecases. Where you get immediate value, and where additional setup is needed.
+
+### Immediately Actionable Usecases
+
+Tasks where the input is **code/config files/text** and the output is **analysis/code/documentation** work right out of the box.
+
+| UC | Scenario | Mode | Why It Works Now |
+|----|---------|------|-----------------|
+| UC1 | IAM policy review | `@verify` | JSON text analysis → cross-validation works immediately |
+| UC3 | Terraform refactoring | `@build` | File-based design→implementation. No external dependencies |
+| UC5 | Autoscaling tuning | `@craft` | Config file analysis + concrete recommendations |
+| UC9 | DR runbook creation | `@design` | Reads Terraform/CloudFormation and generates design docs |
+| UC11 | API migration | `@build` | Design→implementation pipeline. Code generation is the core |
+| UC12 | Bulk test generation | `@craft` | Source analysis → test code generation. **Most practical** |
+| UC13 | PR code review | `@verify` | Git diff text-based analysis. Ready to use |
+| UC14 | Microservice design | `@design` | Code analysis → design docs. Kiro's core strength |
+
+### Usecases Requiring AWS Integration
+
+Tasks that require **real-time AWS API calls** or **external system access** need additional setup.
+
+| UC | Scenario | Mode | Constraint |
+|----|---------|------|-----------|
+| UC2 | CloudWatch log analysis | `@scan` | Gemini CLI needs AWS network/auth configuration |
+| UC4 | CI/CD incident response | `@mobilize` | Cross-referencing GitHub Actions + Terraform state + git log — Master solo may be faster |
+| UC6 | P1 incident response | `@mobilize` | Needs real-time AWS metrics. Slave timeouts (45~120s) are constraining |
+| UC8 | Cost analysis | `@scan` | Needs Cost Explorer API. Codex has sandbox network limitations |
+| UC10 | Security audit | `@mobilize` | Bulk AWS API calls — aws cli scripts may be more practical |
+| UC15 | DB migration | `@mobilize` | Pre-check scripts are useful, but execution requires DBA hands |
+
+### Where Multi-Agent Clearly Outperforms Solo
+
+```
+1. Cross-validation (@verify)
+   → The "second pair of eyes" delivers real value in IAM reviews and code reviews
+   → Gemini misses auth gaps that Codex catches; Codex misses conventions that Gemini catches
+
+2. Design-to-Implementation pipeline (@build)
+   → "Does the implementation match the spec?" becomes structurally verifiable
+   → A single agent struggles to find gaps in its own output
+
+3. Bulk code generation/analysis (@craft)
+   → Tasks that are repetitive yet must be precise: test generation, refactoring
+   → Business-logic-aware meaningful tests vs "assert is not None"
+```
+
+### Where Master Solo is More Efficient
+
+```
+1. Real-time AWS queries
+   → Claude calling MCP/tools directly is faster than Slave delegation
+
+2. First 5 minutes of incident response
+   → Waiting for Slave timeouts while the situation worsens
+   → Master does quick triage first, then delegates deep analysis to Slaves
+
+3. Context-heavy tasks
+   → Conversation history, prior work context — hard to pass to Slaves
+
+4. Simple questions/edits
+   → 3-Agent orchestration overhead only delays the response
+```
+
+### The System's Fundamental Value
+
+The **real value** of the usecase catalog isn't whether specific scenarios execute — it's three structural advantages.
+
+| Value | Description | Applicable Without Agents? |
+|-------|-------------|--------------------------|
+| **Thinking Framework** | Structured approach to "What should I do first in this situation?" | Yes — the mode selection guide alone improves decision quality |
+| **4-Block Format** | Conclusion→Rationale→Risks→Action Plan forces structured decisions | Yes — immediately applicable to postmortems and design reviews |
+| **Auto-Escalation Rules** | "This needs more caution" as a system-level judgment | Yes — used as a checklist, it improves human judgment too |
+
+> **Key Insight**: Of the 15 usecases, **8 are immediately practical** and **7 require AWS integration setup**.
+> But the greatest value isn't in executing individual scenarios — it's the **judgment framework of "What level of caution does this task require?"** itself.
+> This improves team decision-making even without any agents running.
 
 ---
 
